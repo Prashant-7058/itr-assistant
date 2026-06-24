@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>ITR Assistant Login</title>
+
+<style>
+body{
+font-family:Arial;
+background:#f4f7fb;
+display:flex;
+justify-content:center;
+align-items:center;
+height:100vh;
+}
+.box{
+background:white;
+padding:40px;
+border-radius:12px;
+width:340px;
+box-shadow:0 4px 20px rgba(0,0,0,0.1);
+}
+input,button{
+width:100%;
+padding:10px;
+margin:10px 0;
+}
+button{
+background:#2563eb;
+color:white;
+border:none;
+cursor:pointer;
+}
+</style>
+</head>
+
+<body>
+
+<div class="box">
+<h2>Login - ITR Assistant</h2>
+
+<input id="email" placeholder="Email">
+<input id="password" type="password" placeholder="Password">
+
+<button onclick="login()">Login</button>
+</div>
+
+<script>
+async function login(){
+
+const res = await fetch("/api/login",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({
+email:email.value,
+password:password.value
+})
+});
+
+if(res.ok){
+location.href="/static/index.html";
+}else{
+alert("Login failed");
+}
+}
+</script>
+
+</body>
+</html>

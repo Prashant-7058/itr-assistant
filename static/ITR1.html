@@ -1,0 +1,3863 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ITR-1 SAHAJ Filing Tool — AY 2025-26</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="/static/shared.js"></script>
+
+    
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: #003d82;
+            color: white;
+            padding: 1.5rem 2rem;
+            text-align: center;
+        }
+
+        .header h1 { font-size: 1.8rem; margin-bottom: 0.5rem; }
+        .header p { font-size: 0.95rem; opacity: 0.9; }
+
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .regime-box {
+            background: white;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .regime-box h3 {
+            color: #003d82;
+            margin-bottom: 1rem;
+        }
+
+        .regime-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .regime-option {
+            border: 2px solid #ddd;
+            padding: 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .regime-option:hover {
+            border-color: #003d82;
+        }
+
+        .regime-option.selected {
+            border-color: #003d82;
+            background: #e3f2fd;
+        }
+
+        .regime-option input[type="radio"] {
+            margin-right: 0.5rem;
+        }
+
+        .section {
+            background: white;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .section-title {
+            color: #003d82;
+            font-size: 1.3rem;
+            margin-bottom: 0.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #003d82;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .section-title::after {
+            content: '▶';
+            font-size: 0.8rem;
+            transition: transform 0.3s;
+        }
+
+        .section-title.expanded::after {
+            content: '▼';
+        }
+
+        .section-content {
+            display: none;
+            margin-top: 1.5rem;
+        }
+
+        .section-content.active {
+            display: block;
+        }
+
+        .main-sections {
+            display: none;
+        }
+
+        .main-sections.visible {
+            display: block;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .section-subtitle {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 0.4rem;
+            font-size: 0.9rem;
+        }
+
+        .form-group label .req {
+            color: red;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            padding: 0.7rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 0.95rem;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #003d82;
+        }
+
+        .form-group input[type="number"] {
+            text-align: right;
+        }
+
+        .form-group .helper {
+            font-size: 0.8rem;
+            color: #888;
+            margin-top: 0.2rem;
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+            margin: 1rem 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        table th,
+        table td {
+            padding: 0.8rem;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        table th {
+            background: #f5f5f5;
+            font-weight: 600;
+            color: #003d82;
+        }
+
+        table input {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            text-align: right;
+        }
+
+        .computed {
+            background: #f9f9f9;
+            font-weight: 600;
+        }
+
+        .total-row {
+            background: #e3f2fd;
+            font-weight: bold;
+        }
+
+        .subsection {
+            margin-top: 1.5rem;
+        }
+
+        .subsection h4 {
+            color: #003d82;
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+        }
+
+        .deduction-group {
+            background: #fafafa;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-radius: 6px;
+            border-left: 3px solid #003d82;
+        }
+
+        .deduction-group h5 {
+            color: #003d82;
+            margin-bottom: 0.8rem;
+        }
+
+        .summary-box {
+            background: #e3f2fd;
+            padding: 1.5rem;
+            border-radius: 6px;
+            margin-top: 1.5rem;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #bbdefb;
+        }
+
+        .summary-row:last-child {
+            border-bottom: none;
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-top: 0.5rem;
+            padding-top: 1rem;
+            border-top: 2px solid #003d82;
+        }
+
+        .info-box {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 4px;
+        }
+
+        .disabled-section {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        .btn {
+            padding: 0.8rem 2rem;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #003d82;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #002a5c;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+        }
+
+        .action-bar {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+            margin-top: 2rem;
+        }
+
+        .auto-filled {
+            background: #d4edda !important;
+            border-color: #28a745 !important;
+        }
+
+        .hidden {
+            display: none;
+        }
+        /* AI PANEL */
+        .ai-panel { position:fixed; top:0; right:-420px; width:420px; height:100vh; background:#0f172a; border-left:1px solid #1e293b; box-shadow:-5px 0 20px rgba(0,0,0,0.4); display:flex; flex-direction:column; transition:right 0.3s ease; z-index:9999; }
+        .ai-header { display:flex; justify-content:space-between; align-items:center; padding:16px; border-bottom:1px solid #1e293b; background:#111827; }
+        .ai-title { font-weight:600; font-size:16px; color:#fff; }
+        .ai-sub { font-size:12px; color:#9ca3af; }
+        .ai-close { background:none; border:none; font-size:20px; color:#9ca3af; cursor:pointer; }
+        .ai-chat { flex:1; padding:16px; overflow-y:auto; display:flex; flex-direction:column; }
+        .chat-user { align-self:flex-end; background:#2563eb; color:white; padding:8px 12px; border-radius:10px 10px 0 10px; margin-bottom:10px; max-width:80%; font-size:14px; }
+        .chat-ai { align-self:flex-start; background:#1f2937; color:#10b981; padding:8px 12px; border-radius:10px 10px 10px 0; margin-bottom:14px; max-width:80%; font-size:14px; }
+        .ai-input-area { display:flex; padding:12px; border-top:1px solid #1e293b; background:#111827; }
+        .ai-input-area textarea { flex:1; resize:none; border-radius:6px; border:1px solid #334155; padding:8px; background:#1e293b; color:white; font-size:14px; height:50px; }
+        .ai-input-area button { margin-left:8px; padding:8px 14px; border:none; background:#2563eb; color:white; border-radius:6px; cursor:pointer; }
+        .ai-typing { font-size:13px; color:#9ca3af; margin-bottom:10px; }
+        .redact-page { margin-bottom:20px; position:relative; }
+        .redact-canvas { border:1px solid #333; cursor:crosshair; }
+        /* TOAST */
+        .toast-container { position:fixed; bottom:24px; right:24px; z-index:99999; display:flex; flex-direction:column; gap:8px; }
+        .toast { display:flex; align-items:center; gap:10px; padding:12px 18px; border-radius:10px; font-size:14px; color:#fff; background:#1e293b; border:1px solid #334155; box-shadow:0 4px 15px rgba(0,0,0,0.3); min-width:260px; }
+        .toast.success { border-color:#10b981; }
+        .toast.error { border-color:#ef4444; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>INCOME TAX RETURN - ITR-1 (SAHAJ)</h1>
+        <p>For Individuals having Income from Salaries, one house property, other sources (Interest etc.) and having total income up to Rs.50 lakh</p>
+        <p>Assessment Year: 2025-26 | Financial Year: 2024-25</p>
+    </div>
+
+
+
+    <div class="container">
+
+        <!-- AI AUTO FILL — shown before sections (same as ITR-2) -->
+        <div style="background:#1c1f26;border:1px solid #2e3347;border-radius:12px;padding:20px;margin-bottom:25px;">
+            <h3 style="margin-bottom:10px;color:#fff;">🤖 AI Auto-Fill from PDF</h3>
+            <input type="file" id="aiPdf" accept="application/pdf" style="margin-bottom:10px;color:#ccc;">
+            <button class="btn btn-primary" onclick="autoFillFromPDF()">Upload &amp; Auto Fill</button>
+            <p id="aiStatus" style="margin-top:10px;color:#9aa3ba;"></p>
+        </div>
+
+        <!-- Tax Regime Selection -->
+        <div class="regime-box">
+            <h3>Select Tax Regime</h3>
+            <div class="regime-options">
+                <label class="regime-option">
+                    <input type="radio" name="regime" value="new" onchange="changeRegime('new')">
+                    <div>
+                        <strong>New Tax Regime (Section 115BAC)</strong>
+                        <p style="font-size: 0.85rem; color: #666; margin-top: 0.3rem;">
+                            Lower tax rates, limited deductions (Only Standard Deduction ₹75,000)
+                        </p>
+                    </div>
+                </label>
+                <label class="regime-option">
+                    <input type="radio" name="regime" value="old" onchange="changeRegime('old')">
+                    <div>
+                        <strong>Old Tax Regime</strong>
+                        <p style="font-size: 0.85rem; color: #666; margin-top: 0.3rem;">
+                            Higher tax rates, all deductions allowed (80C, 80D, HRA, etc.)
+                        </p>
+                    </div>
+                </label>
+            </div>
+        </div>
+
+        <!-- ALL SECTIONS - Hidden initially, shown after regime selection -->
+        <div class="main-sections" id="mainSections">
+
+        <!-- PART A: GENERAL INFORMATION -->
+        <div class="section">
+            <h2 class="section-title" onclick="toggleSection(this)">PART A - GENERAL INFORMATION</h2>
+            <div class="section-content">
+            
+            <!-- Filing Information -->
+            <div class="subsection">
+                <h4>Filing Information</h4>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Return filed under section <span class="req">*</span></label>
+                        <select id="filingSection" data-key="filingSection" required>
+                            <option value="139(1)">139(1) — On or before due date</option>
+                            <option value="139(4)">139(4) — Belated return</option>
+                            <option value="139(5)">139(5) — Revised return</option>
+                            <option value="142(1)">142(1) — In response to notice</option>
+                            <option value="148">148 — In response to notice u/s 148</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Filing before due date? <span class="req">*</span></label>
+                        <select id="beforeDueDate" data-key="beforeDueDate">
+                            <option value="Y">Yes</option>
+                            <option value="N">No</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <p class="section-subtitle">Personal Information</p>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>First Name <span class="req">*</span></label>
+                    <input type="text" id="firstName" data-key="firstName" required>
+                </div>
+                <div class="form-group">
+                    <label>Middle Name</label>
+                    <input type="text" id="middleName" data-key="middleName">
+                </div>
+                <div class="form-group">
+                    <label>Last Name / Surname <span class="req">*</span></label>
+                    <input type="text" id="lastName" data-key="lastName" required>
+                </div>
+                <div class="form-group">
+                    <label>PAN <span class="req">*</span></label>
+                    <input type="text" id="pan" data-key="pan" maxlength="10" placeholder="ABCDE1234F" required>
+                    <span class="helper">10 characters</span>
+                </div>
+                <div class="form-group">
+                    <label>Aadhaar Number <span class="req">*</span></label>
+                    <input type="text" id="aadhaar" data-key="aadhaar" maxlength="12" placeholder="xxxxxxxxxxxx">
+                    <span class="helper">12 digits</span>
+                </div>
+                <div class="form-group">
+                    <label>Date of Birth <span class="req">*</span></label>
+                    <input type="date" id="dob" data-key="dob" required>
+                </div>
+                <div class="form-group">
+                    <label>Gender <span class="req">*</span></label>
+                    <select id="gender" data-key="gender" required>
+                        <option value="">Select</option>
+                        <option value="M">Male</option>
+                        <option value="F">Female</option>
+                        <option value="O">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Residential Status <span class="req">*</span></label>
+                    <select id="resStatus" data-key="resStatus" required>
+                        <option value="RES">Resident</option>
+                        <option value="NRI">Non-Resident Indian</option>
+                        <option value="RNOR">Resident but Not Ordinary Resident</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Category</label>
+                    <select id="category" data-key="category">
+                        <option value="">Select</option>
+                        <option value="GEN">General</option>
+                        <option value="SC">SC</option>
+                        <option value="ST">ST</option>
+                        <option value="OBC">OBC</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Nature of Employment <span class="req">*</span></label>
+                    <select id="employmentNature" data-key="employmentNature" required>
+                            <option value="">Select</option>
+                            <option value="CGOV">Central Government (CGOV)</option>
+                            <option value="SGOV">State Government (SGOV)</option>
+                            <option value="PSU">Public Sector Undertaking (PSU)</option>
+                            <option value="PE">Pensioners - Central Govt (PE)</option>
+                            <option value="PESG">Pensioners - State Govt (PESG)</option>
+                            <option value="PEPS">Pensioners - PSU (PEPS)</option>
+                            <option value="PEO">Pensioners - Others (PEO)</option>
+                            <option value="OTH">Others (OTH)</option>
+                            <option value="NA">Not Applicable (NA)</option>
+                        </select>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h4>Contact Details</h4>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Mobile Number <span class="req">*</span></label>
+                        <input type="tel" id="mobile" data-key="mobile" maxlength="10" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Email Address <span class="req">*</span></label>
+                        <input type="email" id="email" data-key="email" required>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h4>Director Information</h4>
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label>Are you a Director in any company? <span class="req">*</span></label>
+                    <div>
+                        <label style="display: inline; margin-right: 1rem;">
+                            <input type="radio" name="isDirector" value="Y" onchange="toggleDirector(true)"> Yes
+                        </label>
+                        <label style="display: inline;">
+                            <input type="radio" name="isDirector" value="N" checked onchange="toggleDirector(false)"> No
+                        </label>
+                    </div>
+                </div>
+                <div id="directorSection" class="hidden">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>DIN (Director Identification Number)</label>
+                            <input type="text" id="din" maxlength="8">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h4>Unlisted Equity Shares</h4>
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label>Have you held unlisted equity shares at any time during the year? <span class="req">*</span></label>
+                    <div>
+                        <label style="display: inline; margin-right: 1rem;">
+                            <input type="radio" name="hasShares" value="Y" onchange="toggleShares(true)"> Yes
+                        </label>
+                        <label style="display: inline;">
+                            <input type="radio" name="hasShares" value="N" checked onchange="toggleShares(false)"> No
+                        </label>
+                    </div>
+                </div>
+                <div id="sharesSection" class="hidden">
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Company Name</th>
+                                    <th>PAN</th>
+                                    <th>Opening Shares</th>
+                                    <th>Acquired</th>
+                                    <th>Transferred</th>
+                                    <th>Closing</th>
+                                    <th>Cost of Acquisition</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="sharesTable">
+                                <tr>
+                                    <td><input type="text" id="shareCompany1"></td>
+                                    <td><input type="text" id="sharePAN1" maxlength="10"></td>
+                                    <td><input type="number" id="shareOpening1" value="0"></td>
+                                    <td><input type="number" id="shareAcquired1" value="0"></td>
+                                    <td><input type="number" id="shareTransferred1" value="0"></td>
+                                    <td><input type="number" id="shareClosing1" value="0"></td>
+                                    <td><input type="number" id="shareCost1" value="0"></td>
+                                    <td><button type="button" class="btn btn-secondary" onclick="addShareRow()">+</button></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h4>Address</h4>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Flat/Door/Block No. <span class="req">*</span></label>
+                        <input type="text" id="flatNo" data-key="flatNo" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Name of Premises/Building/Village</label>
+                        <input type="text" id="premises" data-key="premises">
+                    </div>
+                    <div class="form-group">
+                        <label>Road/Street/Lane/Post Office</label>
+                        <input type="text" id="street" data-key="street">
+                    </div>
+                    <div class="form-group">
+                        <label>Area/Locality <span class="req">*</span></label>
+                        <input type="text" id="locality" data-key="locality" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Town/City/District <span class="req">*</span></label>
+                        <input type="text" id="city" data-key="city" required>
+                    </div>
+                    <div class="form-group">
+                        <label>State <span class="req">*</span></label>
+                        <select id="state" data-key="state" required>
+                            <option value="">Select State</option>
+                            <option value="01">Jammu and Kashmir</option>
+                            <option value="02">Himachal Pradesh</option>
+                            <option value="03">Punjab</option>
+                            <option value="04">Chandigarh</option>
+                            <option value="05">Uttarakhand</option>
+                            <option value="06">Haryana</option>
+                            <option value="07">Delhi</option>
+                            <option value="08">Rajasthan</option>
+                            <option value="09">Uttar Pradesh</option>
+                            <option value="10">Bihar</option>
+                            <option value="11">Sikkim</option>
+                            <option value="12">Arunachal Pradesh</option>
+                            <option value="13">Nagaland</option>
+                            <option value="14">Manipur</option>
+                            <option value="15">Mizoram</option>
+                            <option value="16">Tripura</option>
+                            <option value="17">Meghalaya</option>
+                            <option value="18">Assam</option>
+                            <option value="19">West Bengal</option>
+                            <option value="20">Jharkhand</option>
+                            <option value="21">Odisha</option>
+                            <option value="22">Chhattisgarh</option>
+                            <option value="23">Madhya Pradesh</option>
+                            <option value="24">Gujarat</option>
+                            <option value="25">Daman and Diu</option>
+                            <option value="26">Dadra and Nagar Haveli</option>
+                            <option value="27">Maharashtra</option>
+                            <option value="28">Andhra Pradesh (Old)</option>
+                            <option value="29">Karnataka</option>
+                            <option value="30">Goa</option>
+                            <option value="31">Lakshadweep</option>
+                            <option value="32">Kerala</option>
+                            <option value="33">Tamil Nadu</option>
+                            <option value="34">Puducherry</option>
+                            <option value="35">Andaman and Nicobar</option>
+                            <option value="36">Telangana</option>
+                            <option value="37">Andhra Pradesh (New)</option>
+                            <option value="38">Ladakh</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>PIN Code <span class="req">*</span></label>
+                        <input type="text" id="pincode" data-key="pincode" maxlength="6" required>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h4>Bank Account Details (for Refund) <span class="req">*</span></h4>
+                <p class="section-subtitle">Provide ALL bank accounts. One must be marked for refund.</p>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Account Number</th>
+                                <th>IFSC Code</th>
+                                <th>Bank Name</th>
+                                <th>Account Type</th>
+                                <th>Use for Refund</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="bankAccountsTable">
+                            <tr>
+                                <td><input type="text" id="accountNo1" required></td>
+                                <td><input type="text" id="ifsc1" maxlength="11" placeholder="SBIN0001234" required></td>
+                                <td><input type="text" id="bankName1" required></td>
+                                <td>
+                                    <select id="accountType1" required>
+                                        <option value="SB">Savings</option>
+                                        <option value="CR">Current</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <input type="radio" name="refundAccount" value="1" checked>
+                                </td>
+                                <td><button type="button" class="btn btn-secondary" onclick="addBankRow()">+</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            </div>
+        </div>
+
+        <!-- PART B: COMPUTATION OF TOTAL INCOME -->
+        <div class="section">
+            <h2 class="section-title" onclick="toggleSection(this)">PART B-TI: COMPUTATION OF TOTAL INCOME</h2>
+            <div class="section-content">
+            
+            <!-- 1. SALARY INCOME -->
+            <div class="subsection">
+                <h4>1. Income from Salary</h4>
+                
+                <div class="subsection">
+                    <h5>Employer Details</h5>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Employer Name</label>
+                            <input type="text" id="employerName" data-key="employerName">
+                        </div>
+                        <div class="form-group">
+                            <label>Employer TAN</label>
+                            <input type="text" id="employerTAN" data-key="employerTAN" placeholder="ABCD12345E" maxlength="10">
+                        </div>
+                        <div class="form-group">
+                            <label>Employer Address</label>
+                            <input type="text" id="employerAddress">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table>
+                        <tr>
+                            <td>Gross Salary (Section 17(1))</td>
+                            <td style="width: 200px;"><input type="number" id="grossSalary" data-key="grossSalary" value="0" oninput="calcSalary()"></td>
+                        </tr>
+                        <tr>
+                            <td>Value of Perquisites (Section 17(2))</td>
+                            <td><input type="number" id="perquisites" data-key="perquisites" value="0" oninput="calcSalary()"></td>
+                        </tr>
+                        <tr>
+                            <td>Profits in lieu of Salary (Section 17(3))</td>
+                            <td><input type="number" id="profitsInLieu" data-key="profitsInLieu" value="0" oninput="calcSalary()"></td>
+                        </tr>
+                        <tr class="computed">
+                            <td><strong>Total (1+2+3)</strong></td>
+                            <td><strong id="totalSalary">0</strong></td>
+                        </tr>
+                        <tr>
+                            <td>Less: Allowances exempt u/s 10</td>
+                            <td><input type="number" id="exemptAllowances" data-key="exemptAllowances" value="0" oninput="calcSalary()"></td>
+                        </tr>
+                        <tr class="computed">
+                            <td><strong>Net Salary</strong></td>
+                            <td><strong id="netSalary">0</strong></td>
+                        </tr>
+                        <tr>
+                            <td>Less: Standard Deduction u/s 16(ia)</td>
+                            <td><input type="number" id="stdDeduction" data-key="stdDeduction" value="75000" readonly style="background: #f0f0f0;"></td>
+                        </tr>
+                        <tr>
+                            <td>Less: Entertainment Allowance u/s 16(ii) (Govt employees only)</td>
+                            <td><input type="number" id="entertainment" data-key="entertainment" value="0" oninput="calcSalary()"></td>
+                        </tr>
+                        <tr>
+                            <td>Less: Professional Tax u/s 16(iii)</td>
+                            <td><input type="number" id="profTax" data-key="profTax" value="0" max="2500" oninput="calcSalary()"></td>
+                        </tr>
+                        <tr class="total-row">
+                            <td><strong>Income from Salary</strong></td>
+                            <td><strong id="incomeFromSalary">0</strong></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 2. HOUSE PROPERTY INCOME -->
+            <div class="subsection">
+                <h4>2. Income from House Property</h4>
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label>Do you own a house property? <span class="req">*</span></label>
+                    <div>
+                        <label style="display: inline; margin-right: 1rem;">
+                            <input type="radio" name="hasProperty" value="yes" onchange="toggleProperty(true)"> Yes
+                        </label>
+                        <label style="display: inline;">
+                            <input type="radio" name="hasProperty" value="no" checked onchange="toggleProperty(false)"> No
+                        </label>
+                    </div>
+                </div>
+                
+                <div id="propertySection" class="hidden">
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label>Property Type</label>
+                        <select id="propertyType" data-key="propertyType" onchange="calcProperty()">
+                            <option value="self">Self Occupied</option>
+                            <option value="letout">Let Out</option>
+                        </select>
+                    </div>
+
+                    <div class="subsection">
+                        <h5>Property Details</h5>
+                        <div class="form-group">
+                            <label>Address of Property</label>
+                            <textarea id="propertyAddress" rows="2"></textarea>
+                        </div>
+                        
+                        <div class="form-group" style="margin-top: 1rem;">
+                            <label>Is there a Co-owner?</label>
+                            <div>
+                                <label style="display: inline; margin-right: 1rem;">
+                                    <input type="radio" name="hasCoOwner" value="Y" onchange="toggleCoOwner(true)"> Yes
+                                </label>
+                                <label style="display: inline;">
+                                    <input type="radio" name="hasCoOwner" value="N" checked onchange="toggleCoOwner(false)"> No
+                                </label>
+                            </div>
+                        </div>
+
+                        <div id="coOwnerSection" class="hidden" style="margin-top: 1rem;">
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label>Co-owner PAN</label>
+                                    <input type="text" id="coOwnerPAN" maxlength="10">
+                                </div>
+                                <div class="form-group">
+                                    <label>Your Share %</label>
+                                    <input type="number" id="sharePercentage" min="0" max="100" value="50">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table>
+                            <tr id="rentRow">
+                                <td>Gross Annual Value (Rent Received/Receivable)</td>
+                                <td style="width: 200px;"><input type="number" id="rent" data-key="rent" value="0" oninput="calcProperty()"></td>
+                            </tr>
+                            <tr id="taxRow">
+                                <td>Less: Municipal Taxes Paid</td>
+                                <td><input type="number" id="munTax" data-key="munTax" value="0" oninput="calcProperty()"></td>
+                            </tr>
+                            <tr class="computed">
+                                <td><strong>Net Annual Value (NAV)</strong></td>
+                                <td><strong id="nav">0</strong></td>
+                            </tr>
+                            <tr>
+                                <td>Less: Deduction u/s 24(a) @ 30% of NAV</td>
+                                <td id="deduction30">0</td>
+                            </tr>
+                            <tr>
+                                <td>Less: Interest on Housing Loan u/s 24(b)</td>
+                                <td><input type="number" id="houseInterest" data-key="houseInterest" value="0" oninput="calcProperty()"></td>
+                            </tr>
+                            <tr>
+                                <td>Arrears / Unrealized Rent Received (u/s 25A)</td>
+                                <td><input type="number" id="arrears" data-key="arrears" value="0" oninput="calcProperty()"></td>
+                            </tr>
+                            <tr class="total-row">
+                                <td><strong>Income from House Property</strong></td>
+                                <td><strong id="incomeFromHP">0</strong></td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. INCOME FROM OTHER SOURCES -->
+            <div class="subsection">
+                <h4>3. Income from Other Sources</h4>
+                <div class="table-responsive">
+                    <table>
+                        <tr>
+                            <td>Interest from Savings Bank Account</td>
+                            <td style="width: 200px;"><input type="number" id="savingsInt" data-key="savingsInt" value="0" oninput="calcOtherIncome()"></td>
+                        </tr>
+                        <tr>
+                            <td>Interest from Fixed Deposits</td>
+                            <td><input type="number" id="fdInt" data-key="fdInt" value="0" oninput="calcOtherIncome()"></td>
+                        </tr>
+                        <tr>
+                            <td>Interest from Income Tax Refund</td>
+                            <td><input type="number" id="refundInt" data-key="refundInt" value="0" oninput="calcOtherIncome()"></td>
+                        </tr>
+                        <tr>
+                            <td>Dividend Income</td>
+                            <td><input type="number" id="dividend" data-key="dividend" value="0" oninput="calcOtherIncome()"></td>
+                        </tr>
+                        <tr>
+                            <td>Family Pension</td>
+                            <td><input type="number" id="familyPension" data-key="familyPension" value="0" oninput="calcOtherIncome()"></td>
+                        </tr>
+                        <tr>
+                            <td>Any Other Income</td>
+                            <td><input type="number" id="otherIncome" data-key="otherIncome" value="0" oninput="calcOtherIncome()"></td>
+                        </tr>
+                        <tr class="total-row">
+                            <td><strong>Total Income from Other Sources</strong></td>
+                            <td><strong id="totalOtherIncome">0</strong></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- GROSS TOTAL INCOME -->
+            <div class="summary-box">
+                <div class="summary-row">
+                    <span>Income from Salary</span>
+                    <span id="sumSalary">₹0</span>
+                </div>
+                <div class="summary-row">
+                    <span>Income from House Property</span>
+                    <span id="sumHP">₹0</span>
+                </div>
+                <div class="summary-row">
+                    <span>Income from Other Sources</span>
+                    <span id="sumOther">₹0</span>
+                </div>
+                <div class="summary-row">
+                    <span>Gross Total Income</span>
+                    <span id="grossTotalIncome">₹0</span>
+                </div>
+            </div>
+
+            <!-- EXEMPT INCOME -->
+            <div class="subsection">
+                <h4>Exempt Income (Not included in Total Income)</h4>
+                <div class="info-box">
+                    <strong>Note:</strong> This section is mandatory even if amounts are zero.
+                </div>
+                <div class="table-responsive">
+                    <table>
+                        <tr>
+                            <td>Agricultural Income</td>
+                            <td style="width: 200px;"><input type="number" id="agricultureIncome" data-key="agricultureIncome" value="0"></td>
+                        </tr>
+                        <tr>
+                            <td>Interest from PPF Account</td>
+                            <td><input type="number" id="ppfInterest" data-key="ppfInterest" value="0"></td>
+                        </tr>
+                        <tr>
+                            <td>Exempt Dividend Income</td>
+                            <td><input type="number" id="exemptDividend" data-key="exemptDividend" value="0"></td>
+                        </tr>
+                        <tr>
+                            <td>Gratuity Received (exempt portion)</td>
+                            <td><input type="number" id="exemptGratuity" data-key="exemptGratuity" value="0"></td>
+                        </tr>
+                        <tr>
+                            <td>Leave Encashment (exempt portion)</td>
+                            <td><input type="number" id="exemptLeave" data-key="exemptLeave" value="0"></td>
+                        </tr>
+                        <tr>
+                            <td>Any Other Exempt Income</td>
+                            <td><input type="number" id="otherExempt" data-key="otherExempt" value="0"></td>
+                        </tr>
+                        <tr class="total-row">
+                            <td><strong>Total Exempt Income</strong></td>
+                            <td><strong id="totalExemptIncome">₹0</strong></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            </div>
+        </div>
+
+        <!-- DEDUCTIONS - CHAPTER VI-A -->
+        <div class="section hidden" id="deductionsSection">
+            <h2 class="section-title" onclick="toggleSection(this)">CHAPTER VI-A DEDUCTIONS</h2>
+            <div class="section-content">
+            <p class="section-subtitle">Available only under Old Tax Regime</p>
+
+            <div class="info-box" id="regimeNote">
+                <strong>Note:</strong> You have selected New Tax Regime. Deductions under Chapter VI-A are not available (except some specific deductions).
+            </div>
+
+            <!-- 80C -->
+            <div class="deduction-group">
+                <h5>Section 80C - Maximum ₹1,50,000</h5>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Life Insurance Premium</label>
+                        <input type="number" id="lic" data-key="lic" value="0" max="150000" oninput="calc80C()">
+                    </div>
+                    <div class="form-group">
+                        <label>PPF (Public Provident Fund)</label>
+                        <input type="number" id="ppf" data-key="ppf" value="0" max="150000" oninput="calc80C()">
+                    </div>
+                    <div class="form-group">
+                        <label>ELSS (Equity Linked Savings Scheme)</label>
+                        <input type="number" id="elss" data-key="elss" value="0" max="150000" oninput="calc80C()">
+                    </div>
+                    <div class="form-group">
+                        <label>NSC (National Savings Certificate)</label>
+                        <input type="number" id="nsc" data-key="nsc" value="0" max="150000" oninput="calc80C()">
+                    </div>
+                    <div class="form-group">
+                        <label>Tuition Fees (2 Children)</label>
+                        <input type="number" id="tuition" data-key="tuition" value="0" max="150000" oninput="calc80C()">
+                    </div>
+                    <div class="form-group">
+                        <label>Home Loan Principal Repayment</label>
+                        <input type="number" id="homePrincipal" data-key="homePrincipal" value="0" max="150000" oninput="calc80C()">
+                    </div>
+                    <div class="form-group">
+                        <label>Sukanya Samriddhi Account</label>
+                        <input type="number" id="sukanya" data-key="sukanya" value="0" max="150000" oninput="calc80C()">
+                    </div>
+                    <div class="form-group">
+                        <label>Fixed Deposit (5 years)</label>
+                        <input type="number" id="fd5year" value="0" max="150000" oninput="calc80C()">
+                    </div>
+                    <div class="form-group">
+                        <label>Senior Citizen Savings Scheme</label>
+                        <input type="number" id="scss" value="0" max="150000" oninput="calc80C()">
+                    </div>
+                    <div class="form-group">
+                        <label>Other 80C Investments</label>
+                        <input type="number" id="other80c" value="0" max="150000" oninput="calc80C()">
+                    </div>
+                </div>
+                <div style="margin-top: 1rem; padding: 0.8rem; background: white; border-radius: 4px;">
+                    <strong>Total 80C (Maximum ₹1,50,000): </strong>
+                    <span id="total80C" style="float: right; color: #003d82; font-size: 1.1rem;">₹0</span>
+                </div>
+            </div>
+
+            <!-- 80CCD -->
+            <div class="deduction-group">
+                <h5>Section 80CCD - National Pension System (NPS)</h5>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Employee Contribution to NPS u/s 80CCD(1)</label>
+                        <input type="number" id="nps80ccd1" value="0" oninput="calcDeductions()">
+                        <span class="helper">Part of 80C limit</span>
+                    </div>
+                    <div class="form-group">
+                        <label>Additional NPS u/s 80CCD(1B)</label>
+                        <input type="number" id="nps80ccd1b" data-key="nps80ccd1b" value="0" max="50000" oninput="calcDeductions()">
+                        <span class="helper">Maximum ₹50,000 (separate from 80C)</span>
+                    </div>
+                    <div class="form-group">
+                        <label>Employer Contribution to NPS u/s 80CCD(2)</label>
+                        <input type="number" id="nps80ccd2" data-key="nps80ccd2" value="0" oninput="calcDeductions()">
+                        <span class="helper">Maximum 10% of Salary</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 80D -->
+            <div class="deduction-group">
+                <h5>Section 80D - Health Insurance Premium</h5>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Self + Family (Below 60 years)</label>
+                        <input type="number" id="healthSelf" data-key="healthSelf" value="0" max="25000" oninput="calcDeductions()">
+                        <span class="helper">Maximum ₹25,000</span>
+                    </div>
+                    <div class="form-group">
+                        <label>Self + Family (60 years or above)</label>
+                        <input type="number" id="healthSelfSr" data-key="healthSelfSr" value="0" max="50000" oninput="calcDeductions()">
+                        <span class="helper">Maximum ₹50,000</span>
+                    </div>
+                    <div class="form-group">
+                        <label>Parents (Below 60 years)</label>
+                        <input type="number" id="healthParents" data-key="healthParents" value="0" max="25000" oninput="calcDeductions()">
+                        <span class="helper">Maximum ₹25,000</span>
+                    </div>
+                    <div class="form-group">
+                        <label>Parents (60 years or above)</label>
+                        <input type="number" id="healthParentsSr" data-key="healthParentsSr" value="0" max="50000" oninput="calcDeductions()">
+                        <span class="helper">Maximum ₹50,000</span>
+                    </div>
+                    <div class="form-group">
+                        <label>Preventive Health Check-up</label>
+                        <input type="number" id="healthCheckup" data-key="healthCheckup" value="0" max="5000" oninput="calcDeductions()">
+                        <span class="helper">Maximum ₹5,000 (included in above limits)</span>
+                    </div>
+                </div>
+                <div style="margin-top: 1rem; padding: 0.8rem; background: white; border-radius: 4px;">
+                    <strong>Total 80D: </strong>
+                    <span id="total80D" style="float: right; color: #003d82; font-size: 1.1rem;">₹0</span>
+                </div>
+            </div>
+
+            <!-- 80E -->
+            <div class="deduction-group">
+                <h5>Section 80E - Interest on Education Loan</h5>
+                <div class="form-group">
+                    <label>Interest paid on Education Loan</label>
+                    <input type="number" id="eduLoanInt" data-key="eduLoanInt" value="0" oninput="calcDeductions()">
+                    <span class="helper">No upper limit</span>
+                </div>
+            </div>
+
+            <!-- 80EE -->
+            <div class="deduction-group">
+                <h5>Section 80EE - Interest on Home Loan (First Time Home Buyer)</h5>
+                <div class="form-group">
+                    <label>Interest on Home Loan u/s 80EE</label>
+                    <input type="number" id="homeLoan80EE" data-key="homeLoan80EE" value="0" max="50000" oninput="calcDeductions()">
+                    <span class="helper">Maximum ₹50,000 (Loan sanctioned before 01-Apr-2017)</span>
+                </div>
+            </div>
+
+            <!-- 80EEA -->
+            <div class="deduction-group">
+                <h5>Section 80EEA - Interest on Home Loan (Affordable Housing)</h5>
+                <div class="form-group">
+                    <label>Interest on Home Loan u/s 80EEA</label>
+                    <input type="number" id="homeLoan80EEA" data-key="homeLoan80EEA" value="0" max="150000" oninput="calcDeductions()">
+                    <span class="helper">Maximum ₹1,50,000 (Loan sanctioned between 01-Apr-2019 to 31-Mar-2022)</span>
+                </div>
+            </div>
+
+            <!-- 80G -->
+            <div class="deduction-group">
+                <h5>Section 80G - Donations</h5>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Donee Name</th>
+                                <th>PAN</th>
+                                <th>Address</th>
+                                <th>Donation Amount</th>
+                                <th>Eligible %</th>
+                                <th>Eligible Amount</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="donationsTable">
+                            <tr>
+                                <td><input type="text" id="doneeName1"></td>
+                                <td><input type="text" id="doneePAN1" maxlength="10"></td>
+                                <td><input type="text" id="doneeAddress1"></td>
+                                <td><input type="number" id="donationAmt1" value="0" oninput="calcDonation(1)"></td>
+                                <td>
+                                    <select id="donationPct1" onchange="calcDonation(1)">
+                                        <option value="100">100%</option>
+                                        <option value="50">50%</option>
+                                    </select>
+                                </td>
+                                <td><input type="number" id="donationEligible1" value="0" readonly style="background: #f0f0f0;"></td>
+                                <td><button type="button" class="btn btn-secondary" onclick="addDonationRow()">+</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div style="margin-top: 1rem; padding: 0.8rem; background: white; border-radius: 4px;">
+                    <strong>Total 80G: </strong>
+                    <span id="total80G" style="float: right; color: #003d82; font-size: 1.1rem;">₹0</span>
+                </div>
+            </div>
+
+            <!-- 80TTA/TTB -->
+            <div class="deduction-group">
+                <h5>Section 80TTA/80TTB - Interest Income <span style="font-size:0.8em;color:#e74c3c;">(Mutually exclusive — only one applies based on age)</span></h5>
+                <div class="form-group">
+                    <label>80TTA — Savings account interest <span style="color:#666;">(Age &lt; 60 only)</span></label>
+                    <input type="number" id="tta" data-key="tta" value="0" max="10000" oninput="calcDeductions()">
+                    <span class="helper">Max ₹10,000 | Auto-disabled for Senior Citizens</span>
+                </div>
+                <div class="form-group">
+                    <label>80TTB — Any interest income <span style="color:#666;">(Age ≥ 60 only)</span></label>
+                    <input type="number" id="ttb" data-key="ttb" value="0" max="50000" oninput="calcDeductions()">
+                    <span class="helper">Max ₹50,000 | Auto-disabled for non-seniors</span>
+                </div>
+            </div>
+
+            <!-- Other Deductions -->
+            <div class="deduction-group">
+                <h5>Other Deductions</h5>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>80DD - Disability</label>
+                        <input type="number" id="disability" data-key="disability" value="0" oninput="calcDeductions()">
+                        <span class="helper">₹75,000 or ₹1,25,000</span>
+                    </div>
+                    <div class="form-group">
+                        <label>80DDB - Medical Treatment</label>
+                        <input type="number" id="medical" data-key="medical" value="0" oninput="calcDeductions()">
+                        <span class="helper">₹40,000 or ₹1,00,000</span>
+                    </div>
+                    <div class="form-group">
+                        <label>80U - Self Disability</label>
+                        <input type="number" id="selfDisability" data-key="selfDisability" value="0" oninput="calcDeductions()">
+                        <span class="helper">₹75,000 or ₹1,25,000</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Total Deductions -->
+            <div class="summary-box">
+                <div class="summary-row">
+                    <span>Total Chapter VI-A Deductions</span>
+                    <span id="totalDeductions">₹0</span>
+                </div>
+            </div>
+            </div>
+        </div>
+
+        <!-- TAX COMPUTATION -->
+        <div class="section">
+            <h2 class="section-title" onclick="toggleSection(this)">TAX COMPUTATION</h2>
+            <div class="section-content">
+
+            <div class="summary-box">
+                <h4 style="color: #003d82; margin-bottom: 1rem;">Income Computation</h4>
+                <div class="summary-row">
+                    <span>Gross Total Income</span>
+                    <span id="taxGTI">₹0</span>
+                </div>
+                <div class="summary-row">
+                    <span>Less: Chapter VI-A Deductions</span>
+                    <span id="taxDeductions">₹0</span>
+                </div>
+                <div class="summary-row">
+                    <span>Total Income (Taxable Income)</span>
+                    <span id="taxableIncome">₹0</span>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h4>Tax Calculation</h4>
+                <div id="taxSlabs" style="margin: 1rem 0;"></div>
+                
+                <div class="table-responsive">
+                    <table>
+                        <tr>
+                            <td>Tax on Total Income</td>
+                            <td style="width: 200px;" id="taxOnIncome">₹0</td>
+                        </tr>
+                        <tr>
+                            <td>Less: Rebate u/s 87A</td>
+                            <td id="rebate87A">₹0</td>
+                        </tr>
+                        <tr class="computed">
+                            <td><strong>Tax After Rebate</strong></td>
+                            <td><strong id="taxAfterRebate">₹0</strong></td>
+                        </tr>
+                        <tr>
+                            <td>Add: Surcharge (if applicable)</td>
+                            <td id="surcharge">₹0</td>
+                        </tr>
+                        <tr>
+                            <td>Add: Health & Education Cess @ 4%</td>
+                            <td id="cess">₹0</td>
+                        </tr>
+                        <tr class="total-row">
+                            <td><strong>Total Tax Liability</strong></td>
+                            <td><strong id="totalTaxLiability">₹0</strong></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- TDS & Payments -->
+            <div class="subsection">
+                <h4>Tax Paid / TDS / TCS</h4>
+                
+                <h5 style="margin-top: 1.5rem; color: #003d82;">Schedule TDS1 - TDS from Salary (Form 16)</h5>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>TAN of Employer</th>
+                                <th>Name of Employer</th>
+                                <th>Income Chargeable</th>
+                                <th>TDS Deducted</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="tds1Table">
+                            <tr>
+                                <td><input type="text" id="tds1TAN1" maxlength="10"></td>
+                                <td><input type="text" id="tds1Name1"></td>
+                                <td><input type="number" id="tds1Income1" value="0" oninput="calcTDS1()"></td>
+                                <td><input type="number" id="tds1Amount1" value="0" oninput="calcTDS1()"></td>
+                                <td><button type="button" class="btn btn-secondary" onclick="addTDS1Row()">+</button></td>
+                            </tr>
+                        </tbody>
+                        <tfoot>
+                            <tr class="total-row">
+                                <td colspan="3"><strong>Total TDS from Salary</strong></td>
+                                <td><strong id="totalTDS1">₹0</strong></td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+
+                <h5 style="margin-top: 1.5rem; color: #003d82;">Schedule TDS2 - TDS Other than Salary (Form 16A/26AS)</h5>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>TAN of Deductor</th>
+                                <th>Name of Deductor</th>
+                                <th>Income</th>
+                                <th>TDS Deducted</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="tds2Table">
+                            <tr>
+                                <td><input type="text" id="tds2TAN1" maxlength="10"></td>
+                                <td><input type="text" id="tds2Name1"></td>
+                                <td><input type="number" id="tds2Income1" value="0" oninput="calcTDS2()"></td>
+                                <td><input type="number" id="tds2Amount1" value="0" oninput="calcTDS2()"></td>
+                                <td><button type="button" class="btn btn-secondary" onclick="addTDS2Row()">+</button></td>
+                            </tr>
+                        </tbody>
+                        <tfoot>
+                            <tr class="total-row">
+                                <td colspan="3"><strong>Total TDS Other than Salary</strong></td>
+                                <td><strong id="totalTDS2">₹0</strong></td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+
+                <h5 style="margin-top: 1.5rem; color: #003d82;">Schedule TCS - Tax Collected at Source</h5>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>TAN of Collector</th>
+                                <th>Name of Collector</th>
+                                <th>Amount of Payment</th>
+                                <th>TCS Collected</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="tcsTable">
+                            <tr>
+                                <td><input type="text" id="tcsTAN1" maxlength="10"></td>
+                                <td><input type="text" id="tcsName1"></td>
+                                <td><input type="number" id="tcsAmount1" value="0" oninput="calcTCS()"></td>
+                                <td><input type="number" id="tcsCollected1" value="0" oninput="calcTCS()"></td>
+                                <td><button type="button" class="btn btn-secondary" onclick="addTCSRow()">+</button></td>
+                            </tr>
+                        </tbody>
+                        <tfoot>
+                            <tr class="total-row">
+                                <td colspan="3"><strong>Total TCS</strong></td>
+                                <td><strong id="totalTCS">₹0</strong></td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+
+                <h5 style="margin-top: 1.5rem; color: #003d82;">Advance Tax Paid</h5>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>BSR Code</th>
+                                <th>Date of Deposit</th>
+                                <th>Challan Serial Number</th>
+                                <th>Amount</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="advanceTaxTable">
+                            <tr>
+                                <td><input type="text" id="advBSR1" maxlength="7"></td>
+                                <td><input type="date" id="advDate1"></td>
+                                <td><input type="text" id="advSerial1"></td>
+                                <td><input type="number" id="advAmount1" value="0" oninput="calcAdvanceTax()"></td>
+                                <td><button type="button" class="btn btn-secondary" onclick="addAdvanceTaxRow()">+</button></td>
+                            </tr>
+                        </tbody>
+                        <tfoot>
+                            <tr class="total-row">
+                                <td colspan="3"><strong>Total Advance Tax</strong></td>
+                                <td><strong id="totalAdvanceTax">₹0</strong></td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+
+                <h5 style="margin-top: 1.5rem; color: #003d82;">Self Assessment Tax Paid</h5>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>BSR Code</th>
+                                <th>Date of Deposit</th>
+                                <th>Challan Serial Number</th>
+                                <th>Amount</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="selfTaxTable">
+                            <tr>
+                                <td><input type="text" id="selfBSR1" maxlength="7"></td>
+                                <td><input type="date" id="selfDate1"></td>
+                                <td><input type="text" id="selfSerial1"></td>
+                                <td><input type="number" id="selfAmount1" value="0" oninput="calcSelfTax()"></td>
+                                <td><button type="button" class="btn btn-secondary" onclick="addSelfTaxRow()">+</button></td>
+                            </tr>
+                        </tbody>
+                        <tfoot>
+                            <tr class="total-row">
+                                <td colspan="3"><strong>Total Self Assessment Tax</strong></td>
+                                <td><strong id="totalSelfTax">₹0</strong></td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+
+                <div class="summary-box" style="margin-top: 1.5rem;">
+                    <h5 style="color: #003d82; margin-bottom: 1rem;">Total Taxes Paid Summary</h5>
+                    <div class="summary-row">
+                        <span>TDS from Salary</span>
+                        <span id="sumTDS1">₹0</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>TDS Other than Salary</span>
+                        <span id="sumTDS2">₹0</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>TCS</span>
+                        <span id="sumTCS">₹0</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>Advance Tax</span>
+                        <span id="sumAdvance">₹0</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>Self Assessment Tax</span>
+                        <span id="sumSelf">₹0</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>Total Taxes Paid</span>
+                        <span id="totalTaxPaid">₹0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Interest & Late Fee -->
+            <div class="summary-box" style="margin-top:1rem;">
+                <h4 style="color:#003d82;margin-bottom:1rem;">Interest & Late Filing Fee</h4>
+                <div class="summary-row">
+                    <span>Interest u/s 234A (Late filing)</span>
+                    <input type="number" id="int234A" data-key="int234A" value="0" min="0" style="width:140px;" oninput="calcFinalTax()">
+                </div>
+                <div class="summary-row">
+                    <span>Interest u/s 234B (Advance tax shortfall)</span>
+                    <input type="number" id="int234B" data-key="int234B" value="0" min="0" style="width:140px;" oninput="calcFinalTax()">
+                </div>
+                <div class="summary-row">
+                    <span>Interest u/s 234C (Deferment)</span>
+                    <input type="number" id="int234C" data-key="int234C" value="0" min="0" style="width:140px;" oninput="calcFinalTax()">
+                </div>
+                <div class="summary-row">
+                    <span>Late Filing Fee u/s 234F</span>
+                    <input type="number" id="lateFee234F" data-key="lateFee234F" value="0" min="0" style="width:140px;" oninput="calcFinalTax()">
+                </div>
+            </div>
+
+            <!-- Final Tax Position -->
+            <div class="summary-box">
+                <h4 style="color: #003d82; margin-bottom: 1rem;">Tax Payable / Refund</h4>
+                <div class="summary-row">
+                    <span>Total Tax Liability</span>
+                    <span id="finalTaxLiability">₹0</span>
+                </div>
+                <div class="summary-row">
+                    <span>Less: Total Taxes Paid</span>
+                    <span id="finalTaxPaid">₹0</span>
+                </div>
+                <div class="summary-row">
+                    <span id="payableRefundLabel">Tax Payable</span>
+                    <span id="payableRefundAmount" style="color: #d32f2f;">₹0</span>
+                </div>
+            </div>
+            </div>
+        </div>
+
+        <!-- VERIFICATION -->
+        <div class="section">
+            <h2 class="section-title" onclick="toggleSection(this)">VERIFICATION</h2>
+            <div class="section-content">
+            <p class="section-subtitle">Declaration and E-verification</p>
+
+            <div class="info-box">
+                <p><strong>Declaration:</strong></p>
+                <p>I, <strong id="verifyName">[Name]</strong>, son/daughter/wife of <strong id="verifyFatherName">[Father Name]</strong>, solemnly declare that to the best of my knowledge and belief, the information given in this return and the schedules and statements annexed thereto is correct and complete and that the amount of total income and other particulars shown therein are truly stated and are in accordance with the provisions of the Income-tax Act, 1961.</p>
+            </div>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Name of Person Verifying <span class="req">*</span></label>
+                    <input type="text" id="verifierName" data-key="verifierName" required>
+                </div>
+                <div class="form-group">
+                    <label>Father's Name <span class="req">*</span></label>
+                    <input type="text" id="fatherName" data-key="fatherName" required>
+                </div>
+                <div class="form-group">
+                    <label>Capacity <span class="req">*</span></label>
+                    <select id="capacity" data-key="capacity" required>
+                        <option value="S">Self</option>
+                        <option value="R">Representative</option>
+                        <option value="G">Guardian</option>
+                        <option value="K">Karta (HUF)</option>
+                        <option value="M">Manager</option>
+                        <option value="A">Administrator</option>
+                        <option value="T">Trustee</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Place <span class="req">*</span></label>
+                    <input type="text" id="place" data-key="place" required>
+                </div>
+                <div class="form-group">
+                    <label>Date <span class="req">*</span></label>
+                    <input type="date" id="verifyDate" required>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h4>E-Verification Options</h4>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="eVerifyAadhaar"> I will e-verify using Aadhaar OTP
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="eVerifyLater"> I will e-verify later (within 30 days)
+                    </label>
+                </div>
+                <div class="info-box">
+                    <strong>Note:</strong> E-verification is mandatory. If not done via Aadhaar OTP now, you must complete e-verification within 30 days using one of these methods:
+                    <ul style="margin-top: 0.5rem; margin-left: 1.5rem;">
+                        <li>Aadhaar OTP</li>
+                        <li>Net Banking</li>
+                        <li>Bank Account Number</li>
+                        <li>Demat Account Number</li>
+                        <li>Bank ATM (for specific banks)</li>
+                        <li>Digital Signature Certificate (DSC)</li>
+                    </ul>
+                </div>
+            </div>
+            </div>
+        </div>
+
+        </div>
+        <!-- End of main-sections -->
+
+        <!-- Action Buttons -->
+        <div class="action-bar">
+            <button class="btn btn-warning" id="btn-validate" style="background:#e67e22;border-color:#e67e22;color:#fff;">🔍 Validate</button>
+            <button class="btn btn-success" id="btn-download">📄 Download JSON (ITR-1)</button>
+        </div>
+
+
+
+
+    </div>
+
+<!-- TOAST -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- AI PANEL -->
+<div id="aiPanel" class="ai-panel">
+    <div class="ai-header">
+        <div>
+            <div class="ai-title" id="aiTitle">AI Assistant</div>
+            <div class="ai-sub">Field Guidance</div>
+        </div>
+        <button class="ai-close" onclick="closeAIPanel()">×</button>
+    </div>
+    <div id="aiChat" class="ai-chat"></div>
+    <div class="ai-input-area">
+        <textarea id="aiInput" placeholder="Ask anything about this field..."></textarea>
+        <button onclick="sendAIMessage()">Send</button>
+    </div>
+</div>
+
+<!-- REDACT MODAL -->
+<div id="redactModal" style="position:fixed;inset:0;background:#000000cc;display:none;z-index:99999;">
+    <div style="width:90%;height:90%;margin:2% auto;background:#111;position:relative;border-radius:10px;">
+        <div id="pdfScrollArea" style="height:90%;overflow-y:auto;padding:20px;background:#111;"></div>
+        <div style="position:absolute;top:10px;right:10px;">
+            <button onclick="applyRedaction()" class="btn btn-success">Apply Redaction & Continue</button>
+        </div>
+    </div>
+</div>
+
+    <script>
+        // 🚨 Toggle section function for accordion
+        function toggleSection(titleElement) {
+            const contentDiv = titleElement.nextElementSibling;
+            const isExpanding = !contentDiv.classList.contains('active');
+            
+            if (isExpanding) {
+                // Close all other sections
+                document.querySelectorAll('.section-content').forEach(content => {
+                    content.classList.remove('active');
+                });
+                document.querySelectorAll('.section-title').forEach(title => {
+                    title.classList.remove('expanded');
+                });
+                
+                // Open this section
+                contentDiv.classList.add('active');
+                titleElement.classList.add('expanded');
+            } else {
+                // Close this section
+                contentDiv.classList.remove('active');
+                titleElement.classList.remove('expanded');
+            }
+        }
+
+        // 🚨 COMPREHENSIVE VALIDATION LAYER
+        const VALIDATION_REGEX = {
+            PAN: /^[A-Z]{5}[0-9]{4}[A-Z]$/,
+            TAN: /^[A-Z]{4}[0-9]{5}[A-Z]$/,
+            IFSC: /^[A-Z]{4}0[A-Z0-9]{6}$/,
+            AADHAAR: /^[0-9]{12}$/,
+            BSR: /^[0-9]{7}$/,
+            EMAIL: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+            MOBILE: /^[6-9][0-9]{9}$/,
+            PINCODE: /^[0-9]{6}$/
+        };
+
+        function validateFormat(value, type, fieldName) {
+            if (!value) return { valid: true };
+            const regex = VALIDATION_REGEX[type];
+            if (!regex.test(value)) return { valid: false, message: `Invalid ${fieldName}: ${value}` };
+            return { valid: true };
+        }
+
+        function validateAllFormats() {
+            const errors = [];
+            
+            // PAN, Email, Mobile, PIN validation
+            const pan = document.getElementById('pan').value.toUpperCase();
+            if (!validateFormat(pan, 'PAN', 'PAN').valid) errors.push('Invalid PAN format');
+            
+            const email = document.getElementById('email').value;
+            if (email && !validateFormat(email, 'EMAIL', 'Email').valid) errors.push('Invalid Email format');
+            
+            const mobile = document.getElementById('mobile').value;
+            if (mobile && !validateFormat(mobile, 'MOBILE', 'Mobile').valid) errors.push('Invalid Mobile (10 digits, starting 6-9)');
+            
+            const pincode = document.getElementById('pincode').value;
+            if (pincode && !validateFormat(pincode, 'PINCODE', 'PIN Code').valid) errors.push('Invalid PIN (6 digits)');
+            
+            const aadhaar = document.getElementById('aadhaar').value;
+            if (aadhaar && !validateFormat(aadhaar, 'AADHAAR', 'Aadhaar').valid) errors.push('Invalid Aadhaar (12 digits)');
+            
+            const empTAN = document.getElementById('employerTAN').value.toUpperCase();
+            if (empTAN && !validateFormat(empTAN, 'TAN', 'Employer TAN').valid) errors.push('Invalid Employer TAN');
+            
+            // Bank IFSC
+            for (let i = 1; i <= bankRowCount; i++) {
+                const ifscElem = document.getElementById(`ifsc${i}`);
+                if (ifscElem && ifscElem.value && !validateFormat(ifscElem.value.toUpperCase(), 'IFSC', 'IFSC').valid) {
+                    errors.push(`Invalid Bank ${i} IFSC`);
+                }
+            }
+            
+            // TDS TANs
+            for (let i = 1; i <= tds1RowCount; i++) {
+                const tanElem = document.getElementById(`tds1TAN${i}`);
+                if (tanElem && tanElem.value && !validateFormat(tanElem.value.toUpperCase(), 'TAN', 'TAN').valid) {
+                    errors.push(`Invalid TDS1 TAN ${i}`);
+                }
+            }
+            
+            for (let i = 1; i <= tds2RowCount; i++) {
+                const tanElem = document.getElementById(`tds2TAN${i}`);
+                if (tanElem && tanElem.value && !validateFormat(tanElem.value.toUpperCase(), 'TAN', 'TAN').valid) {
+                    errors.push(`Invalid TDS2 TAN ${i}`);
+                }
+            }
+            
+            for (let i = 1; i <= tcsRowCount; i++) {
+                const tanElem = document.getElementById(`tcsTAN${i}`);
+                if (tanElem && tanElem.value && !validateFormat(tanElem.value.toUpperCase(), 'TAN', 'TAN').valid) {
+                    errors.push(`Invalid TCS TAN ${i}`);
+                }
+            }
+            
+            // BSR codes
+            for (let i = 1; i <= advanceTaxRowCount; i++) {
+                const bsrElem = document.getElementById(`advBSR${i}`);
+                if (bsrElem && bsrElem.value && !validateFormat(bsrElem.value, 'BSR', 'BSR').valid) {
+                    errors.push(`Invalid Advance Tax BSR ${i}`);
+                }
+            }
+            
+            for (let i = 1; i <= selfTaxRowCount; i++) {
+                const bsrElem = document.getElementById(`selfBSR${i}`);
+                if (bsrElem && bsrElem.value && !validateFormat(bsrElem.value, 'BSR', 'BSR').valid) {
+                    errors.push(`Invalid Self Tax BSR ${i}`);
+                }
+            }
+            
+            return errors;
+        }
+
+        // 🚨 LOGICAL CONSISTENCY CHECKS
+        function validateLogicalConsistency() {
+            const errors = [];
+            
+            // TDS > Income check for TDS1
+            for (let i = 1; i <= tds1RowCount; i++) {
+                const incomeElem = document.getElementById(`tds1Income${i}`);
+                const tdsElem = document.getElementById(`tds1Amount${i}`);
+                if (incomeElem && tdsElem) {
+                    const income = parseFloat(incomeElem.value) || 0;
+                    const tds = parseFloat(tdsElem.value) || 0;
+                    if (tds > income && income > 0) {
+                        errors.push(`TDS1 Row ${i}: TDS (${tds}) cannot exceed Income (${income})`);
+                    }
+                }
+            }
+            
+            // TDS > Income check for TDS2
+            for (let i = 1; i <= tds2RowCount; i++) {
+                const incomeElem = document.getElementById(`tds2Income${i}`);
+                const tdsElem = document.getElementById(`tds2Amount${i}`);
+                if (incomeElem && tdsElem) {
+                    const income = parseFloat(incomeElem.value) || 0;
+                    const tds = parseFloat(tdsElem.value) || 0;
+                    if (tds > income && income > 0) {
+                        errors.push(`TDS2 Row ${i}: TDS (${tds}) cannot exceed Income (${income})`);
+                    }
+                }
+            }
+            
+            // TCS > Amount check
+            for (let i = 1; i <= tcsRowCount; i++) {
+                const amountElem = document.getElementById(`tcsAmount${i}`);
+                const tcsElem = document.getElementById(`tcsCollected${i}`);
+                if (amountElem && tcsElem) {
+                    const amount = parseFloat(amountElem.value) || 0;
+                    const tcs = parseFloat(tcsElem.value) || 0;
+                    if (tcs > amount && amount > 0) {
+                        errors.push(`TCS Row ${i}: TCS (${tcs}) cannot exceed Amount (${amount})`);
+                    }
+                }
+            }
+            
+            return errors;
+        }
+
+        // 🚨 ITR-1 ELIGIBILITY CHECK
+        function validateITR1Eligibility() {
+            const errors = [];
+            
+            // Check for capital gains (not allowed in ITR-1)
+            const capitalGains = parseFloat(document.getElementById('capitalGains')?.value || 0);
+            if (capitalGains > 0) {
+                errors.push('❌ NOT ELIGIBLE FOR ITR-1: Capital gains detected. Use ITR-2.');
+            }
+            
+            // Check for business/profession income (not allowed in ITR-1)
+            const businessIncome = parseFloat(document.getElementById('businessIncome')?.value || 0);
+            if (businessIncome > 0) {
+                errors.push('❌ NOT ELIGIBLE FOR ITR-1: Business income detected. Use ITR-3/ITR-4.');
+            }
+            
+            // Check total income limit (₹50 lakh for ITR-1)
+            const gti = formData.grossTotalIncome || 0;
+            if (gti > 5000000) {
+                errors.push('❌ NOT ELIGIBLE FOR ITR-1: Total income exceeds ₹50 lakh. Use ITR-2.');
+            }
+            
+            return errors;
+        }
+
+        let regime = 'new';
+        let formData = {
+            regime: 'new',
+            filingId: 'ITR' + Date.now()
+        };
+
+        // All row counters at top-level scope — prevents hoisting risk in calcDeductions/get80GTotal/collectAll* functions
+        let shareRowCount = 1;
+        let bankRowCount = 1;
+        let donationRowCount = 1;
+        let tds1RowCount = 1;
+        let tds2RowCount = 1;
+        let tcsRowCount = 1;
+        let advanceTaxRowCount = 1;
+        let selfTaxRowCount = 1;
+
+        function changeRegime(selectedRegime) {
+            regime = selectedRegime;
+            formData.regime = selectedRegime;
+            
+            // Update visual selection
+            document.querySelectorAll('.regime-option').forEach(opt => opt.classList.remove('selected'));
+            document.querySelector("input[name='regime'][value='" + selectedRegime + "']").closest('.regime-option')?.classList.add('selected');
+            
+            // Show all sections after regime selection
+            const mainSections = document.getElementById('mainSections');
+            mainSections.classList.add('visible');
+            
+            const deductionsSection = document.getElementById('deductionsSection');
+            const stdDed = document.getElementById('stdDeduction');
+            const regimeNote = document.getElementById('regimeNote');
+            
+            if (regime === 'new') {
+                stdDed.value = 75000;
+                // Hide deductions section for new regime
+                deductionsSection.classList.add('hidden');
+                deductionsSection.classList.add('disabled-section');
+                if (regimeNote) regimeNote.innerHTML = '<strong>Note:</strong> You have selected New Tax Regime. Deductions under Chapter VI-A are not available.';
+                
+                // Reset all deduction inputs in UI
+                document.querySelectorAll('#deductionsSection input[type="number"]').forEach(inp => inp.value = 0);
+                // Reset stale formData values so tax engine gets clean state
+                formData.deduction80C = 0;
+                formData.nps80ccd1b  = 0;
+                formData.nps80ccd2   = 0;
+                formData.total80D    = 0;
+                formData.total80G    = 0;
+                formData.totalDeductions = 0;
+            } else {
+                stdDed.value = 50000;
+                // Show deductions section for old regime
+                deductionsSection.classList.remove('hidden');
+                deductionsSection.classList.remove('disabled-section');
+                if (regimeNote) regimeNote.innerHTML = '<strong>Note:</strong> You have selected Old Tax Regime. All deductions under Chapter VI-A are available.';
+            }
+            
+            calcSalary();
+            calcDeductions(); // Ensure full recomputation chain after regime switch
+        }
+
+        // Salary Calculation
+        function calcSalary() {
+            const gross = parseFloat(document.getElementById('grossSalary').value) || 0;
+            const perq = parseFloat(document.getElementById('perquisites').value) || 0;
+            const profits = parseFloat(document.getElementById('profitsInLieu').value) || 0;
+            const exempt = parseFloat(document.getElementById('exemptAllowances').value) || 0;
+            const std = parseFloat(document.getElementById('stdDeduction').value) || 0;
+            const ent = parseFloat(document.getElementById('entertainment').value) || 0;
+            const prof = parseFloat(document.getElementById('profTax').value) || 0;
+
+            const total = gross + perq + profits;
+            const net = total - exempt;
+            const income = Math.max(0, net - std - ent - prof);
+
+            document.getElementById('totalSalary').textContent = total.toFixed(0);
+            document.getElementById('netSalary').textContent = net.toFixed(0);
+            document.getElementById('incomeFromSalary').textContent = income.toFixed(0);
+
+            formData.incomeFromSalary = income;
+            updateGTI();
+        }
+
+        // House Property
+        function toggleProperty(show) {
+            const section = document.getElementById('propertySection');
+            section.classList.toggle('hidden', !show);
+            if (!show) {
+                formData.incomeFromHP = 0;
+                updateGTI();
+            } else {
+                calcProperty();
+            }
+        }
+
+        function calcProperty() {
+            const type = document.getElementById('propertyType').value;
+            const rent = parseFloat(document.getElementById('rent').value) || 0;
+            const tax = parseFloat(document.getElementById('munTax').value) || 0;
+            const interest = parseFloat(document.getElementById('houseInterest').value) || 0;
+            const arrears = parseFloat(document.getElementById('arrears')?.value) || 0;
+
+            let nav, deduction30, income;
+
+            if (type === 'self') {
+                nav = 0;
+                deduction30 = 0;
+                income = -Math.min(interest, 200000) + arrears;
+            } else {
+                nav = rent - tax;
+                deduction30 = nav * 0.30;
+                income = nav - deduction30 - interest + arrears;
+                // Section 71(3A): HP loss set-off capped at ₹2L
+                if (income < 0) income = Math.max(income, -200000);
+            }
+
+            document.getElementById('nav').textContent = nav.toFixed(0);
+            document.getElementById('deduction30').textContent = deduction30.toFixed(0);
+            document.getElementById('incomeFromHP').textContent = income.toFixed(0);
+
+            formData.incomeFromHP = income;
+            updateGTI();
+        }
+
+        // Other Income
+        function calcOtherIncome() {
+            const savings = parseFloat(document.getElementById('savingsInt').value) || 0;
+            const fd = parseFloat(document.getElementById('fdInt').value) || 0;
+            const refund = parseFloat(document.getElementById('refundInt').value) || 0;
+            const div = parseFloat(document.getElementById('dividend').value) || 0;
+            const pension = parseFloat(document.getElementById('familyPension').value) || 0;
+            const other = parseFloat(document.getElementById('otherIncome').value) || 0;
+
+            const total = savings + fd + refund + div + pension + other;
+            document.getElementById('totalOtherIncome').textContent = total.toFixed(0);
+
+            formData.incomeFromOther = total;
+            updateGTI();
+        }
+
+        // Update GTI
+        function updateGTI() {
+            const salary = formData.incomeFromSalary || 0;
+            const hpRaw = formData.incomeFromHP || 0;
+            const other = formData.incomeFromOther || 0;
+
+            // Section 71(3A): HP loss set-off against other income heads capped at ₹2,00,000
+            // Loss beyond ₹2L is carried forward and cannot reduce GTI further in ITR-1
+            const hp = hpRaw < 0 ? Math.max(hpRaw, -200000) : hpRaw;
+            const gti = salary + hp + other;
+
+            document.getElementById('sumSalary').textContent = '₹' + salary.toLocaleString('en-IN');
+            document.getElementById('sumHP').textContent = '₹' + hp.toLocaleString('en-IN');
+            document.getElementById('sumOther').textContent = '₹' + other.toLocaleString('en-IN');
+            document.getElementById('grossTotalIncome').textContent = '₹' + gti.toLocaleString('en-IN');
+
+            formData.grossTotalIncome = gti;
+            formData.incomeFromHPCapped = hp;
+            calcTax();
+        }
+
+        // 80C Calculation
+        function calc80C() {
+            if (regime === 'new') return;
+
+            const lic      = parseFloat(document.getElementById('lic').value) || 0;
+            const ppf      = parseFloat(document.getElementById('ppf').value) || 0;
+            const elss     = parseFloat(document.getElementById('elss').value) || 0;
+            const nsc      = parseFloat(document.getElementById('nsc').value) || 0;
+            const tuition  = parseFloat(document.getElementById('tuition').value) || 0;
+            const principal= parseFloat(document.getElementById('homePrincipal').value) || 0;
+            const sukanya  = parseFloat(document.getElementById('sukanya').value) || 0;
+            const fd       = parseFloat(document.getElementById('fd5year').value) || 0;
+            const scss     = parseFloat(document.getElementById('scss').value) || 0;
+            const other    = parseFloat(document.getElementById('other80c').value) || 0;
+            // 80CCD(1) employee NPS contribution is part of the combined 80C+80CCC+80CCD(1) cap of ₹1,50,000
+            // Validation Rule #1: Sum of 80C + 80CCC + 80CCD(1) ≤ ₹1,50,000
+            const nps1     = parseFloat(document.getElementById('nps80ccd1').value) || 0;
+
+            const base80C  = lic + ppf + elss + nsc + tuition + principal + sukanya + fd + scss + other;
+            const combined = Math.min(150000, base80C + nps1);   // single combined cap
+            document.getElementById('total80C').textContent = '₹' + combined.toLocaleString('en-IN');
+
+            formData.deduction80C = combined;
+            formData.nps80ccd1    = nps1;   // store raw for JSON (portal shows 80CCD(1) separately)
+            calcDeductions();
+        }
+
+        // All Deductions
+        function calcDeductions() {
+            if (regime === 'new') {
+                formData.totalDeductions = 0;
+                document.getElementById('totalDeductions').textContent = '₹0';
+                calcTax();
+                return;
+            }
+
+            // 80CCD(1) employee NPS is part of the 80C overall ₹1,50,000 cap (Rule #1 from validation doc)
+            // formData.deduction80C already capped at 1.5L inside calc80C()
+            // 80CCD(1) is treated separately from 80CCD(1B) and 80CCD(2)
+            const c80C = formData.deduction80C || 0;
+            const nps1b = Math.min(50000, parseFloat(document.getElementById('nps80ccd1b').value) || 0);
+            // 80CCD(2) employer NPS cap: 10% of salary for Old Regime, 14% for New Regime
+            // Basis = gross salary u/s 17(1) per Section 80CCD(2) of Income Tax Act
+            const nps2Raw  = parseFloat(document.getElementById('nps80ccd2').value) || 0;
+            const nps2Basis = parseFloat(document.getElementById('grossSalary').value) || 0;
+            const nps2Cap   = regime === 'new' ? nps2Basis * 0.14 : nps2Basis * 0.10;
+            const nps2      = Math.min(nps2Raw, nps2Cap);
+            // Show capped value feedback if over limit
+            if (nps2Raw > nps2Cap && nps2Cap > 0) {
+                document.getElementById('nps80ccd2').style.borderColor = '#f39c12';
+                document.getElementById('nps80ccd2').title = `Capped at ${nps2Cap.toFixed(0)} (${regime === 'new' ? '14' : '10'}% of gross salary)`;
+            } else {
+                document.getElementById('nps80ccd2').style.borderColor = '';
+                document.getElementById('nps80ccd2').title = '';
+            }
+
+            const healthSelf      = parseFloat(document.getElementById('healthSelf').value) || 0;
+            const healthSelfSr    = parseFloat(document.getElementById('healthSelfSr').value) || 0;
+            const healthParents   = parseFloat(document.getElementById('healthParents').value) || 0;
+            const healthParentsSr = parseFloat(document.getElementById('healthParentsSr').value) || 0;
+            // Preventive health check-up (Rule #130): combined cap ₹5,000 across all fields
+            // It is NOT additive — it counts WITHIN the block cap, not on top of it
+            const checkupRaw      = parseFloat(document.getElementById('healthCheckup').value) || 0;
+            const checkup         = Math.min(5000, checkupRaw);
+            // 80D block caps (Rules #128, 131, 133, 135):
+            //   Self block  : max ₹25,000 (non-senior) OR ₹50,000 (senior). Checkup included within.
+            //   Parent block: max ₹25,000 (non-senior) OR ₹50,000 (senior). Checkup included within.
+            const selfBlockCap    = (healthSelfSr > 0) ? 50000 : 25000;
+            const parentBlockCap  = (healthParentsSr > 0) ? 50000 : 25000;
+            // Distribute checkup proportionally — cap the self block including checkup contribution
+            const selfBlockRaw    = healthSelf + healthSelfSr + checkup;   // checkup absorbed into self block
+            const parentBlockRaw  = healthParents + healthParentsSr;
+            const selfBlock       = Math.min(selfBlockRaw, selfBlockCap);
+            const parentBlock     = Math.min(parentBlockRaw, parentBlockCap);
+            const total80D        = selfBlock + parentBlock;
+            document.getElementById('total80D').textContent = '₹' + total80D.toLocaleString('en-IN');
+
+            const eduLoan = parseFloat(document.getElementById('eduLoanInt').value) || 0;
+            const ee = Math.min(50000, parseFloat(document.getElementById('homeLoan80EE').value) || 0);
+            const eea = Math.min(150000, parseFloat(document.getElementById('homeLoan80EEA').value) || 0);
+
+            // Calculate 80G from detailed table
+            let total80G = 0;
+            for (let i = 1; i <= donationRowCount; i++) {
+                const elem = document.getElementById(`donationEligible${i}`);
+                if (elem) total80G += parseFloat(elem.value) || 0;
+            }
+            document.getElementById('total80G').textContent = '₹' + total80G.toLocaleString('en-IN');
+
+            // 80TTA vs 80TTB — mutually exclusive, age-gated (Rules #13, #15, #16)
+            // 80TTA: savings interest only, max ₹10k, only for < 60 years
+            // 80TTB: any interest income, max ₹50k, only for >= 60 years (senior citizen)
+            // Cannot claim both — portal will reject
+            const dobVal    = document.getElementById('dob')?.value;
+            const dobDate   = dobVal ? new Date(dobVal) : null;
+            // Senior citizen threshold: born ON OR BEFORE 01/04/1965 (turned 60 by 01/04/2025)
+            const isSenior  = dobDate ? dobDate <= new Date('1965-04-01') : false;
+            
+            const ttaInput  = document.getElementById('tta');
+            const ttbInput  = document.getElementById('ttb');
+            
+            // Enforce age-based eligibility dynamically
+            if (isSenior) {
+                // Senior: only 80TTB allowed; zero and disable 80TTA
+                ttaInput.value = 0;
+                ttaInput.disabled = true;
+                ttaInput.title = 'Not available for Senior Citizens (age ≥ 60) — use 80TTB instead';
+                ttaInput.style.background = '#f5f5f5';
+                ttbInput.disabled = false;
+                ttbInput.style.background = '';
+                ttbInput.title = '';
+            } else if (dobDate) {
+                // Non-senior: only 80TTA allowed; zero and disable 80TTB
+                ttbInput.value = 0;
+                ttbInput.disabled = true;
+                ttbInput.title = 'Only available for Senior Citizens (age ≥ 60) — use 80TTA instead';
+                ttbInput.style.background = '#f5f5f5';
+                ttaInput.disabled = false;
+                ttaInput.style.background = '';
+                ttaInput.title = '';
+            }
+            
+            const tta = isSenior ? 0 : Math.min(10000, parseFloat(ttaInput.value) || 0);
+            const ttb = isSenior ? Math.min(50000, parseFloat(ttbInput.value) || 0) : 0;
+            const disability = parseFloat(document.getElementById('disability').value) || 0;
+            const medical = parseFloat(document.getElementById('medical').value) || 0;
+            const selfDisability = parseFloat(document.getElementById('selfDisability').value) || 0;
+
+            const total = c80C + nps1b + nps2 + total80D + eduLoan + ee + eea + total80G + tta + ttb + disability + medical + selfDisability;
+            
+            document.getElementById('totalDeductions').textContent = '₹' + total.toLocaleString('en-IN');
+            formData.totalDeductions = total;
+
+            calcTax();
+        }
+
+        // Tax Calculation
+        function calcTax() {
+            const gti = formData.grossTotalIncome || 0;
+            const deductions = formData.totalDeductions || 0;
+            const taxableIncome = Math.max(0, gti - deductions);
+
+            let tax = 0;
+            let slabsHTML = '';
+
+            if (regime === 'new') {
+                // NEW REGIME FY 2024-25 (AY 2025-26) - Correct Slab Rates
+                // 0-3L: 0%, 3L-7L: 5%, 7L-10L: 10%, 10L-12L: 15%, 12L-15L: 20%, >15L: 30%
+                let t0=0, t1=0, t2=0, t3=0, t4=0, t5=0;
+                if (taxableIncome > 300000)  t1 = Math.min(taxableIncome, 700000)  - 300000;
+                if (taxableIncome > 700000)  t2 = Math.min(taxableIncome, 1000000) - 700000;
+                if (taxableIncome > 1000000) t3 = Math.min(taxableIncome, 1200000) - 1000000;
+                if (taxableIncome > 1200000) t4 = Math.min(taxableIncome, 1500000) - 1200000;
+                if (taxableIncome > 1500000) t5 = taxableIncome - 1500000;
+                tax = t1*0.05 + t2*0.10 + t3*0.15 + t4*0.20 + t5*0.30;
+                slabsHTML = `<p>₹0 – ₹3,00,000 @ 0%: ₹0</p>`;
+                if (t1 > 0) slabsHTML += `<p>₹3,00,001 – ₹7,00,000 @ 5%: ₹${(t1*0.05).toFixed(0)}</p>`;
+                if (t2 > 0) slabsHTML += `<p>₹7,00,001 – ₹10,00,000 @ 10%: ₹${(t2*0.10).toFixed(0)}</p>`;
+                if (t3 > 0) slabsHTML += `<p>₹10,00,001 – ₹12,00,000 @ 15%: ₹${(t3*0.15).toFixed(0)}</p>`;
+                if (t4 > 0) slabsHTML += `<p>₹12,00,001 – ₹15,00,000 @ 20%: ₹${(t4*0.20).toFixed(0)}</p>`;
+                if (t5 > 0) slabsHTML += `<p>Above ₹15,00,000 @ 30%: ₹${(t5*0.30).toFixed(0)}</p>`;
+            } else {
+                // OLD REGIME - Cumulative Slab Calculation
+                let o1=0, o2=0, o3=0;
+                if (taxableIncome > 250000)  o1 = Math.min(taxableIncome, 500000)  - 250000;
+                if (taxableIncome > 500000)  o2 = Math.min(taxableIncome, 1000000) - 500000;
+                if (taxableIncome > 1000000) o3 = taxableIncome - 1000000;
+                tax = o1*0.05 + o2*0.20 + o3*0.30;
+                slabsHTML = `<p>₹0 – ₹2,50,000 @ 0%: ₹0</p>`;
+                if (o1 > 0) slabsHTML += `<p>₹2,50,001 – ₹5,00,000 @ 5%: ₹${(o1*0.05).toFixed(0)}</p>`;
+                if (o2 > 0) slabsHTML += `<p>₹5,00,001 – ₹10,00,000 @ 20%: ₹${(o2*0.20).toFixed(0)}</p>`;
+                if (o3 > 0) slabsHTML += `<p>Above ₹10,00,000 @ 30%: ₹${(o3*0.30).toFixed(0)}</p>`;
+            }
+
+            // ROUND TAX TO NEAREST ₹10 (Official ITR Portal Rule)
+            tax = Math.round(tax / 10) * 10;
+
+            // Rebate 87A
+            let rebate = 0;
+            if (regime === 'new' && taxableIncome <= 700000) {
+                rebate = Math.min(tax, 25000);
+            } else if (regime === 'old' && taxableIncome <= 500000) {
+                rebate = Math.min(tax, 12500);
+            }
+
+            const taxAfterRebate = Math.max(0, tax - rebate);
+
+            // SURCHARGE LOGIC (mandatory structure per portal schema)
+            // Applicable only for income > ₹50,00,000
+            let surcharge = 0;
+            if (taxableIncome > 5000000) {
+                if (taxableIncome <= 10000000) {
+                    surcharge = taxAfterRebate * 0.10;           // 10% surcharge: 50L–1Cr
+                } else if (taxableIncome <= 20000000) {
+                    surcharge = taxAfterRebate * 0.15;           // 15% surcharge: 1Cr–2Cr
+                } else if (taxableIncome <= 50000000) {
+                    surcharge = taxAfterRebate * 0.25;           // 25% surcharge: 2Cr–5Cr
+                } else {
+                    surcharge = taxAfterRebate * 0.25;           // 25% surcharge capped (new regime)
+                }
+                // Marginal relief: surcharge cannot exceed income above ₹50L
+                const marginalRelief = taxableIncome - 5000000;
+                surcharge = Math.min(surcharge, marginalRelief);
+                // Round surcharge to nearest ₹10
+                surcharge = Math.round(surcharge / 10) * 10;
+            }
+
+            // Cess @ 4% on (tax after rebate + surcharge)
+            const cess = Math.round(((taxAfterRebate + surcharge) * 0.04) / 10) * 10;
+            const totalTax = taxAfterRebate + surcharge + cess;
+
+            // Update UI
+            document.getElementById('taxGTI').textContent = '₹' + gti.toLocaleString('en-IN');
+            document.getElementById('taxDeductions').textContent = '₹' + deductions.toLocaleString('en-IN');
+            document.getElementById('taxableIncome').textContent = '₹' + taxableIncome.toLocaleString('en-IN');
+            document.getElementById('taxSlabs').innerHTML = slabsHTML;
+            document.getElementById('taxOnIncome').textContent = '₹' + tax.toLocaleString('en-IN');
+            document.getElementById('rebate87A').textContent = '₹' + rebate.toLocaleString('en-IN');
+            document.getElementById('taxAfterRebate').textContent = '₹' + taxAfterRebate.toLocaleString('en-IN');
+            document.getElementById('surcharge').textContent = '₹' + surcharge.toLocaleString('en-IN');
+            document.getElementById('cess').textContent = '₹' + cess.toLocaleString('en-IN');
+            document.getElementById('totalTaxLiability').textContent = '₹' + totalTax.toLocaleString('en-IN');
+
+            formData.taxableIncome = taxableIncome;
+            formData.surcharge = surcharge;
+            formData.totalTaxLiability = totalTax;
+
+            calcTaxPayable();
+        }
+
+        // Tax Payable/Refund
+        function calcTaxPayable() {
+            const totalTax = formData.totalTaxLiability || 0;
+            
+            const int234A  = parseFloat(document.getElementById('int234A')?.value)  || 0;
+            const int234B  = parseFloat(document.getElementById('int234B')?.value)  || 0;
+            const int234C  = parseFloat(document.getElementById('int234C')?.value)  || 0;
+            const late234F = parseFloat(document.getElementById('lateFee234F')?.value) || 0;
+            const totalInterest = int234A + int234B + int234C + late234F;
+            const totalLiability = totalTax + totalInterest;
+
+            // Get totals from detailed tables
+            let tds1 = 0;
+            for (let i = 1; i <= tds1RowCount; i++) {
+                const elem = document.getElementById(`tds1Amount${i}`);
+                if (elem) tds1 += parseFloat(elem.value) || 0;
+            }
+            
+            let tds2 = 0;
+            for (let i = 1; i <= tds2RowCount; i++) {
+                const elem = document.getElementById(`tds2Amount${i}`);
+                if (elem) tds2 += parseFloat(elem.value) || 0;
+            }
+            
+            let tcs = 0;
+            for (let i = 1; i <= tcsRowCount; i++) {
+                const elem = document.getElementById(`tcsCollected${i}`);
+                if (elem) tcs += parseFloat(elem.value) || 0;
+            }
+            
+            let advance = 0;
+            for (let i = 1; i <= advanceTaxRowCount; i++) {
+                const elem = document.getElementById(`advAmount${i}`);
+                if (elem) advance += parseFloat(elem.value) || 0;
+            }
+            
+            let self = 0;
+            for (let i = 1; i <= selfTaxRowCount; i++) {
+                const elem = document.getElementById(`selfAmount${i}`);
+                if (elem) self += parseFloat(elem.value) || 0;
+            }
+
+            const totalPaid = tds1 + tds2 + tcs + advance + self;
+            const balance = totalLiability - totalPaid;
+
+            document.getElementById('totalTaxPaid').textContent = '₹' + totalPaid.toFixed(0);
+            document.getElementById('finalTaxLiability').textContent = '₹' + totalLiability.toFixed(0);
+            document.getElementById('finalTaxPaid').textContent = '₹' + totalPaid.toFixed(0);
+
+            if (balance >= 0) {
+                document.getElementById('payableRefundLabel').textContent = 'Tax Payable';
+                document.getElementById('payableRefundAmount').textContent = '₹' + balance.toFixed(0);
+                document.getElementById('payableRefundAmount').style.color = '#d32f2f';
+            } else {
+                document.getElementById('payableRefundLabel').textContent = 'Refund Due';
+                document.getElementById('payableRefundAmount').textContent = '₹' + Math.abs(balance).toFixed(0);
+                document.getElementById('payableRefundAmount').style.color = '#28a745';
+            }
+
+            formData.taxPayable = balance;
+        }
+
+        // Save to DB
+        // ── Standalone Validation Function ─────────────────────────────
+        function validateForm() {
+            const errs = [];
+            const warns = [];
+
+            // ── Personal Info ────────────────────────────────────────────
+            const pan = (document.getElementById('pan')?.value || '').toUpperCase().trim();
+            if (!pan) {
+                errs.push('PAN is required');
+            } else if (!/^[A-Z]{5}[0-9]{4}[A-Z]$/.test(pan)) {
+                errs.push(`PAN "${pan}" is invalid — must be 5 letters + 4 digits + 1 letter (e.g. ABCDE1234F)`);
+            }
+
+            const aadhaar = (document.getElementById('aadhaar')?.value || '').trim();
+            if (aadhaar && !/^[0-9]{12}$/.test(aadhaar))
+                errs.push(`Aadhaar "${aadhaar}" must be exactly 12 digits`);
+
+            const pincode = (document.getElementById('pincode')?.value || '').trim();
+            if (pincode && !/^[1-9][0-9]{5}$/.test(pincode))
+                errs.push(`Pincode "${pincode}" must be 6 digits and not start with 0`);
+
+            const mobile = (document.getElementById('mobile')?.value || '').trim();
+            if (mobile && !/^[6-9][0-9]{9}$/.test(mobile))
+                errs.push(`Mobile "${mobile}" must be 10 digits starting with 6–9`);
+
+            const email = (document.getElementById('email')?.value || '').trim();
+            if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
+                errs.push(`Email "${email}" format is invalid`);
+
+            const dob = document.getElementById('dob')?.value;
+            if (!dob) {
+                errs.push('Date of Birth is required');
+            } else {
+                const age = (new Date('2025-03-31') - new Date(dob)) / (365.25 * 24 * 3600 * 1000);
+                if (age < 0) errs.push('Date of Birth cannot be in the future');
+                // Rule #277: DOB on or after 01/04/2007 not allowed for AY 25-26
+                if (new Date(dob) >= new Date('2007-04-01'))
+                    errs.push('Assessee born on or after 01/04/2007 is not eligible to file ITR-1 for AY 2025-26');
+            }
+
+            // ── TDS Schedule 1 (Salary TDS) ──────────────────────────────
+            for (let i = 1; i <= tds1RowCount; i++) {
+                const tan = (document.getElementById('tds1TAN'+i)?.value || '').toUpperCase().trim();
+                if (tan && !/^[A-Z]{4}[0-9]{5}[A-Z]$/.test(tan))
+                    errs.push(`TDS1 row ${i}: TAN "${tan}" invalid — must be 4 letters + 5 digits + 1 letter (e.g. ABCD12345E)`);
+            }
+
+            // ── TDS Schedule 2 (Other TDS) ───────────────────────────────
+            for (let i = 1; i <= tds2RowCount; i++) {
+                const tan = (document.getElementById('tds2TAN'+i)?.value || '').toUpperCase().trim();
+                if (tan && !/^[A-Z]{4}[0-9]{5}[A-Z]$/.test(tan))
+                    errs.push(`TDS2 row ${i}: TAN "${tan}" invalid`);
+            }
+
+            // ── Bank Accounts ────────────────────────────────────────────
+            let hasRefundBank = false;
+            for (let i = 1; i <= bankRowCount; i++) {
+                const ifsc = (document.getElementById('ifsc'+i)?.value || '').toUpperCase().trim();
+                const accNo = (document.getElementById('accountNo'+i)?.value || '').trim();
+                const refund = document.getElementById('useForRefund'+i)?.checked;
+                if (refund) hasRefundBank = true;
+                if (ifsc && !/^[A-Z]{4}0[A-Z0-9]{6}$/.test(ifsc))
+                    errs.push(`Bank row ${i}: IFSC "${ifsc}" invalid — must be 4 letters + 0 + 6 alphanumeric (e.g. SBIN0001234)`);
+                if (accNo && !/^[0-9A-Z]{5,20}$/.test(accNo))
+                    warns.push(`Bank row ${i}: Account number "${accNo}" may be invalid`);
+            }
+            if (bankRowCount > 0 && !hasRefundBank)
+                warns.push('No bank account marked for refund — required if refund is due');
+
+            // ── Advance / Self Tax ───────────────────────────────────────
+            for (let i = 1; i <= advanceTaxRowCount; i++) {
+                const bsr = (document.getElementById('advBSR'+i)?.value || '').trim();
+                const dt  = document.getElementById('advDate'+i)?.value;
+                const amt = parseFloat(document.getElementById('advAmount'+i)?.value) || 0;
+                if (bsr || amt > 0) {
+                    if (bsr && !/^[0-9]{3}[0-9A-Z]{4}$/.test(bsr))
+                        errs.push(`Advance Tax row ${i}: BSR "${bsr}" invalid — must be 7 chars (e.g. 0001234)`);
+                    if (!dt) errs.push(`Advance Tax row ${i}: Date of deposit is required`);
+                    if (amt <= 0) errs.push(`Advance Tax row ${i}: Amount must be greater than 0`);
+                }
+            }
+            for (let i = 1; i <= selfTaxRowCount; i++) {
+                const bsr = (document.getElementById('selfBSR'+i)?.value || '').trim();
+                const dt  = document.getElementById('selfDate'+i)?.value;
+                const amt = parseFloat(document.getElementById('selfAmount'+i)?.value) || 0;
+                if (bsr || amt > 0) {
+                    if (bsr && !/^[0-9]{3}[0-9A-Z]{4}$/.test(bsr))
+                        errs.push(`Self Assessment Tax row ${i}: BSR "${bsr}" invalid`);
+                    if (!dt) errs.push(`Self Assessment Tax row ${i}: Date of deposit is required`);
+                }
+            }
+
+            // ── Income Eligibility ───────────────────────────────────────
+            const gti  = formData.grossTotalIncome || 0;
+            const ded  = formData.totalDeductions || 0;
+            const ti   = Math.max(0, gti - ded);
+            if (ti > 5125000)
+                errs.push(`Total Income ₹${ti.toLocaleString('en-IN')} exceeds ₹51,25,000 — ITR-1 not applicable. Use ITR-2.`);
+
+            // ── 80C + 80CCD(1) combined cap ──────────────────────────────
+            const c80c  = formData.deduction80C || 0;
+            if (c80c > 150000)
+                errs.push(`80C + 80CCD(1) combined deduction ₹${c80c.toLocaleString('en-IN')} exceeds ₹1,50,000 cap`);
+
+            // ── Deductions ≤ GTI (Rule #18) ──────────────────────────────
+            if (ded > gti && gti > 0)
+                warns.push(`Total deductions ₹${ded.toLocaleString('en-IN')} exceed GTI ₹${gti.toLocaleString('en-IN')} — portal will cap deductions to GTI`);
+
+            // ── Mandatory fields ─────────────────────────────────────────
+            const fname = (document.getElementById('firstName')?.value || '').trim();
+            const lname = (document.getElementById('lastName')?.value || '').trim();
+            if (!fname) errs.push('First Name is required');
+            if (!lname) errs.push('Last Name / Surname is required');
+
+            const empCat = document.getElementById('employmentNature')?.value;
+            if (!empCat) errs.push('Nature of Employment is required');
+
+            // 80TTA / 80TTB mutual exclusion (Rules #13, #15)
+            const ttaVal = parseFloat(document.getElementById('tta')?.value) || 0;
+            const ttbVal = parseFloat(document.getElementById('ttb')?.value) || 0;
+            if (ttaVal > 0 && ttbVal > 0)
+                errs.push('80TTA and 80TTB cannot both be claimed — 80TTA is for non-seniors (< 60 yrs), 80TTB is for senior citizens (≥ 60 yrs)');
+            
+            // 80TTA age check: cannot be claimed by senior citizen (born on/before 01/04/1965)
+            const dobChk = document.getElementById('dob')?.value;
+            if (dobChk && ttaVal > 0 && new Date(dobChk) <= new Date('1965-04-01'))
+                errs.push('80TTA cannot be claimed by Senior Citizens (born on or before 01/04/1965) — use 80TTB instead');
+            if (dobChk && ttbVal > 0 && new Date(dobChk) > new Date('1965-04-01'))
+                errs.push('80TTB can only be claimed by Senior Citizens (born on or before 01/04/1965)');
+
+            // ── Show Results ─────────────────────────────────────────────
+            if (errs.length === 0 && warns.length === 0) {
+                alert('✅ Validation Passed!\n\nAll fields are valid. You can now Generate JSON.');
+                return true;
+            }
+
+            let msg = '';
+            if (errs.length > 0)  msg += '\u274C ERRORS (' + errs.length + ') - Must fix before upload:\n\n' + errs.map((e,i) => (i+1)+'. '+e).join('\n');
+            if (warns.length > 0) msg += '\n\n\u26A0\uFE0F WARNINGS (' + warns.length + ') - Review recommended:\n\n' + warns.map((w,i) => (i+1)+'. '+w).join('\n');
+            alert(msg);
+            return errs.length === 0;
+        }
+
+        // Generate JSON
+
+        // ============================================================================
+        // ALL HELPER FUNCTIONS - MUST BE DEFINED FIRST
+        // ============================================================================
+        
+        // Helper to calculate 80D total
+        function get80DTotal() {
+            const healthSelf      = parseFloat(document.getElementById('healthSelf')?.value) || 0;
+            const healthSelfSr    = parseFloat(document.getElementById('healthSelfSr')?.value) || 0;
+            const healthParents   = parseFloat(document.getElementById('healthParents')?.value) || 0;
+            const healthParentsSr = parseFloat(document.getElementById('healthParentsSr')?.value) || 0;
+            const checkup         = Math.min(5000, parseFloat(document.getElementById('healthCheckup')?.value) || 0);
+            const selfBlockCap    = (healthSelfSr > 0) ? 50000 : 25000;
+            const parentBlockCap  = (healthParentsSr > 0) ? 50000 : 25000;
+            const selfBlock       = Math.min(healthSelf + healthSelfSr + checkup, selfBlockCap);
+            const parentBlock     = Math.min(healthParents + healthParentsSr, parentBlockCap);
+            return selfBlock + parentBlock;
+        }
+
+        // Helper to calculate 80G total
+        function get80GTotal() {
+            let total = 0;
+            for (let i = 1; i <= donationRowCount; i++) {
+                const elem = document.getElementById(`donationEligible${i}`);
+                if (elem) total += parseFloat(elem.value) || 0;
+            }
+            return total;
+        }
+
+        // Collect bank accounts
+        function collectAllBankAccounts() {
+            const accounts = [];
+            for (let i = 1; i <= bankRowCount; i++) {
+                const accountNo = document.getElementById(`accountNo${i}`)?.value;
+                if (accountNo) {
+                    accounts.push({
+                        accountNo: accountNo,
+                        ifsc: document.getElementById(`ifsc${i}`)?.value || '',
+                        bankName: document.getElementById(`bankName${i}`)?.value || '',
+                        accountType: document.getElementById(`accountType${i}`)?.value || 'SB',
+                        useForRefund: document.querySelector(`input[name="refundAccount"][value="${i}"]`)?.checked || false
+                    });
+                }
+            }
+            return accounts;
+        }
+
+        // Collect TDS1
+        function collectAllTDS1() {
+            const tds1 = [];
+            for (let i = 1; i <= tds1RowCount; i++) {
+                const tan = document.getElementById(`tds1TAN${i}`)?.value;
+                if (tan) {
+                    tds1.push({
+                        tan: tan,
+                        name: document.getElementById(`tds1Name${i}`)?.value || '',
+                        income: parseFloat(document.getElementById(`tds1Income${i}`)?.value) || 0,
+                        tds: parseFloat(document.getElementById(`tds1Amount${i}`)?.value) || 0
+                    });
+                }
+            }
+            return tds1;
+        }
+
+        // Collect TDS2
+        function collectAllTDS2() {
+            const tds2 = [];
+            for (let i = 1; i <= tds2RowCount; i++) {
+                const tan = document.getElementById(`tds2TAN${i}`)?.value;
+                if (tan) {
+                    tds2.push({
+                        tan: tan,
+                        name: document.getElementById(`tds2Name${i}`)?.value || '',
+                        income: parseFloat(document.getElementById(`tds2Income${i}`)?.value) || 0,
+                        tds: parseFloat(document.getElementById(`tds2Amount${i}`)?.value) || 0
+                    });
+                }
+            }
+            return tds2;
+        }
+
+        // Collect TCS
+        function collectAllTCS() {
+            const tcs = [];
+            for (let i = 1; i <= tcsRowCount; i++) {
+                const tan = document.getElementById(`tcsTAN${i}`)?.value;
+                if (tan) {
+                    tcs.push({
+                        tan: tan,
+                        name: document.getElementById(`tcsName${i}`)?.value || '',
+                        amount: parseFloat(document.getElementById(`tcsAmount${i}`)?.value) || 0,
+                        collected: parseFloat(document.getElementById(`tcsCollected${i}`)?.value) || 0
+                    });
+                }
+            }
+            return tcs;
+        }
+
+        // Collect Advance Tax
+        function collectAllAdvanceTax() {
+            const advTax = [];
+            for (let i = 1; i <= advanceTaxRowCount; i++) {
+                const bsr = document.getElementById(`advBSR${i}`)?.value;
+                if (bsr) {
+                    advTax.push({
+                        bsr: bsr,
+                        date: document.getElementById(`advDate${i}`)?.value || '',
+                        serial: document.getElementById(`advSerial${i}`)?.value || '',
+                        amount: parseFloat(document.getElementById(`advAmount${i}`)?.value) || 0
+                    });
+                }
+            }
+            return advTax;
+        }
+
+        // Collect Self Assessment Tax
+        function collectAllSelfTax() {
+            const selfTax = [];
+            for (let i = 1; i <= selfTaxRowCount; i++) {
+                const bsr = document.getElementById(`selfBSR${i}`)?.value;
+                if (bsr) {
+                    selfTax.push({
+                        bsr: bsr,
+                        date: document.getElementById(`selfDate${i}`)?.value || '',
+                        serial: document.getElementById(`selfSerial${i}`)?.value || '',
+                        amount: parseFloat(document.getElementById(`selfAmount${i}`)?.value) || 0
+                    });
+                }
+            }
+            return selfTax;
+        }
+
+        // ============================================================================
+        // COLLECT ALL FORM DATA
+        // ============================================================================
+        
+        function collectCompleteFormData() {
+            return {
+                regime: regime,
+                firstName: document.getElementById('firstName')?.value || '',
+                middleName: document.getElementById('middleName')?.value || '',
+                lastName: document.getElementById('lastName')?.value || '',
+                pan: document.getElementById('pan')?.value || '',
+                aadhaar: document.getElementById('aadhaar')?.value || '',
+                dob: document.getElementById('dob')?.value || '',
+                gender: document.getElementById('gender')?.value || 'M',
+                resStatus: document.getElementById('resStatus')?.value || 'RES',
+                employmentNature: document.getElementById('employmentNature')?.value || 'OTH',
+                flatNo: document.getElementById('flatNo')?.value || '',
+                premises: document.getElementById('premises')?.value || '',
+                street: document.getElementById('street')?.value || '',
+                locality: document.getElementById('locality')?.value || '',
+                city: document.getElementById('city')?.value || '',
+                state: document.getElementById('state')?.value || '27',
+                pincode: document.getElementById('pincode')?.value || '400001',
+                mobile: document.getElementById('mobile')?.value || '',
+                email: document.getElementById('email')?.value || '',
+                grossSalary: parseFloat(document.getElementById('grossSalary')?.value) || 0,
+                perquisites: parseFloat(document.getElementById('perquisites')?.value) || 0,
+                profitsInLieu: parseFloat(document.getElementById('profitsInLieu')?.value) || 0,
+                exemptAllowances: parseFloat(document.getElementById('exemptAllowances')?.value) || 0,
+                stdDeduction: parseFloat(document.getElementById('stdDeduction')?.value) || 75000,
+                entertainment: parseFloat(document.getElementById('entertainment')?.value) || 0,
+                profTax: parseFloat(document.getElementById('profTax')?.value) || 0,
+                employerName: document.getElementById('employerName')?.value || '',
+                employerTAN: document.getElementById('employerTAN')?.value || '',
+                hasProperty: document.querySelector('input[name="hasProperty"]:checked')?.value || 'no',
+                propertyType: document.getElementById('propertyType')?.value || 'self',
+                rent: parseFloat(document.getElementById('rent')?.value) || 0,
+                munTax: parseFloat(document.getElementById('munTax')?.value) || 0,
+                houseInterest: parseFloat(document.getElementById('houseInterest')?.value) || 0,
+                savingsInt: parseFloat(document.getElementById('savingsInt')?.value) || 0,
+                fdInt: parseFloat(document.getElementById('fdInt')?.value) || 0,
+                refundInt: parseFloat(document.getElementById('refundInt')?.value) || 0,
+                dividend: parseFloat(document.getElementById('dividend')?.value) || 0,
+                familyPension: parseFloat(document.getElementById('familyPension')?.value) || 0,
+                otherIncome: parseFloat(document.getElementById('otherIncome')?.value) || 0,
+                deduction80C: formData.deduction80C || 0,
+                nps80ccd1b: parseFloat(document.getElementById('nps80ccd1b')?.value) || 0,
+                nps80ccd2: parseFloat(document.getElementById('nps80ccd2')?.value) || 0,
+                total80D: get80DTotal(),
+                eduLoanInt: parseFloat(document.getElementById('eduLoanInt')?.value) || 0,
+                homeLoan80EE: parseFloat(document.getElementById('homeLoan80EE')?.value) || 0,
+                homeLoan80EEA: parseFloat(document.getElementById('homeLoan80EEA')?.value) || 0,
+                total80G: get80GTotal(),
+                tta: parseFloat(document.getElementById('tta')?.value) || 0,
+                ttb: parseFloat(document.getElementById('ttb')?.value) || 0,
+                disability: parseFloat(document.getElementById('disability')?.value) || 0,
+                medical: parseFloat(document.getElementById('medical')?.value) || 0,
+                selfDisability: parseFloat(document.getElementById('selfDisability')?.value) || 0,
+                fatherName: document.getElementById('fatherName')?.value || '',
+                capacity: document.getElementById('capacity')?.value || 'S',
+                place: document.getElementById('place')?.value || '',
+                bankAccounts: collectAllBankAccounts(),
+                tds1: collectAllTDS1(),
+                tds2: collectAllTDS2(),
+                tcs: collectAllTCS(),
+                advanceTax: collectAllAdvanceTax(),
+                selfTax: collectAllSelfTax()
+            };
+        }
+
+        // ============================================================================
+        // GENERATE JSON
+        // ============================================================================
+        
+        function buildITR1JSON() {
+            const formatDate = (d) => {
+                if (!d) return new Date().toISOString().split('T')[0];
+                if (d.includes('-') && d.split('-')[0].length === 4) return d;
+                return d;
+            };
+            const toInt = (v) => Math.round(parseFloat(v) || 0);
+            const g = (id) => document.getElementById(id)?.value || '';
+            const gn = (id) => parseFloat(document.getElementById(id)?.value) || 0;
+
+            const isOld = regime === 'old';
+
+            // ── SALARY ──────────────────────────────────────────────────
+            const gs  = gn('grossSalary');      // Gross salary (basic + DA + all)
+            const pq  = gn('perquisites');
+            const pl  = gn('profitsInLieu');
+            const ts  = gs + pq + pl;           // Total salary before exempt allowances
+            const ea  = gn('exemptAllowances'); // Section 10 allowances
+            const ns  = ts - ea;                // Net salary = ts - ea  (schema "Salary" field)
+            const sd  = gn('stdDeduction');
+            const et  = gn('entertainment');
+            const pt  = gn('profTax');
+            const sal = Math.max(0, ns - sd - et - pt);
+
+            // ── HOUSE PROPERTY ───────────────────────────────────────────
+            const hasHP   = document.querySelector('input[name="hasProperty"]:checked')?.value === 'yes';
+            const hpType  = g('propertyType');
+            const hpt     = hpType === 'self' ? 'S' : 'L';
+            const rent    = hasHP ? gn('rent')         : 0;
+            const mtax    = hasHP ? gn('munTax')        : 0;
+            const hint    = hasHP ? gn('houseInterest') : 0;
+            const arrears = hasHP ? gn('arrears')       : 0;
+            const av      = (hasHP && hpType !== 'self') ? (rent - mtax) : 0;
+            let hpinc     = 0;
+            if (hasHP) {
+                if (hpType === 'self') {
+                    hpinc = -Math.min(hint, 200000) + arrears;
+                } else {
+                    hpinc = av - (av * 0.3) - hint + arrears;
+                    if (hpinc < 0) hpinc = Math.max(hpinc, -200000); // Sec 71(3A) cap
+                }
+            }
+
+            // ── OTHER SOURCES ────────────────────────────────────────────
+            const si = gn('savingsInt');
+            const fi = gn('fdInt');
+            const ri = gn('refundInt');
+            const dv = gn('dividend');
+            const fp = gn('familyPension');
+            const oi = gn('otherIncome');
+            const os = si + fi + ri + dv + fp + oi;
+
+            // Family pension: 1/3 of fp, max 15000 (DeductionUs57iia)
+            const fpDed = fp > 0 ? Math.min(Math.round(fp / 3), 15000) : 0;
+
+            // Build OthersIncDtlsOthSrc properly
+            const othSrcDtls = [];
+            if (si > 0) othSrcDtls.push({"OthSrcNatureDesc": "SBI", "OthSrcOthAmount": toInt(si)});
+            if (fi > 0) othSrcDtls.push({"OthSrcNatureDesc": "OTH", "OthSrcOthAmount": toInt(fi)});
+            if (ri > 0) othSrcDtls.push({"OthSrcNatureDesc": "ITR", "OthSrcOthAmount": toInt(ri)});
+            if (dv > 0) othSrcDtls.push({
+                "OthSrcNatureDesc": "DIV", "OthSrcOthAmount": toInt(dv),
+                "DividendInc": {"DateRange": {"Upto15Of6": 0, "Upto15Of9": 0, "Up16Of9To15Of12": 0, "Up16Of12To15Of3": 0, "Up16Of3To31Of3": 0}}
+            });
+            if (fp > 0) othSrcDtls.push({"OthSrcNatureDesc": "FAP", "OthSrcOthAmount": toInt(fp)});
+            if (oi > 0) othSrcDtls.push({"OthSrcNatureDesc": "OTH", "OthSrcOthAmount": toInt(oi)});
+
+            // ── GROSS TOTAL INCOME ───────────────────────────────────────
+            const gti = sal + hpinc + os;
+
+            // ── AGRICULTURAL / EXEMPT INCOME ─────────────────────────────
+            const agri         = gn('agricultureIncome');
+            const ppfInt       = gn('ppfInterest');
+            const exemptDiv    = gn('exemptDividend');
+            const exemptGrat   = gn('exemptGratuity');
+            const exemptLeave  = gn('exemptLeave');
+            const otherExempt  = gn('otherExempt');
+            const totalExempt  = agri + ppfInt + exemptDiv + exemptGrat + exemptLeave + otherExempt;
+
+            const exemptDtls = [];
+            if (agri > 0) exemptDtls.push({"NatureDesc": "AGRI", "OthAmount": toInt(agri)});
+            if (ppfInt > 0) exemptDtls.push({"NatureDesc": "PPF", "OthAmount": toInt(ppfInt)});
+            if (exemptDiv > 0) exemptDtls.push({"NatureDesc": "DIVEXM", "OthAmount": toInt(exemptDiv)});
+            if (exemptGrat > 0) exemptDtls.push({"NatureDesc": "GRTY", "OthAmount": toInt(exemptGrat)});
+            if (exemptLeave > 0) exemptDtls.push({"NatureDesc": "LFOP", "OthAmount": toInt(exemptLeave)});
+            if (otherExempt > 0) exemptDtls.push({"NatureDesc": "OTH", "OthAmount": toInt(otherExempt)});
+
+            // ── CHAPTER VI-A DEDUCTIONS ──────────────────────────────────
+            const c80  = isOld ? toInt(formData.deduction80C || 0) : 0;
+            const n1b  = isOld ? gn('nps80ccd1b') : 0;
+            const n2Raw= gn('nps80ccd2');
+            const n2Cap= isOld ? Math.round(gs * 0.10) : Math.round(gs * 0.14);
+            const n2   = Math.min(n2Raw, n2Cap);
+            const d80  = isOld ? get80DTotal() : 0;
+            const el   = isOld ? gn('eduLoanInt') : 0;
+            const ee   = isOld ? gn('homeLoan80EE') : 0;
+            const eea  = isOld ? gn('homeLoan80EEA') : 0;
+            const g80  = isOld ? get80GTotal() : 0;
+            const tta  = isOld ? gn('tta') : 0;
+            const ttb  = isOld ? gn('ttb') : 0;
+            const dd   = isOld ? gn('disability') : 0;
+            const ddb  = isOld ? gn('medical') : 0;
+            const u80  = isOld ? gn('selfDisability') : 0;
+            const ded  = c80 + n1b + n2 + d80 + el + ee + eea + g80 + tta + ttb + dd + ddb + u80;
+
+            // ── TOTAL INCOME ─────────────────────────────────────────────
+            const ti = Math.max(0, gti - fpDed - ded);
+
+            // ── TAX COMPUTATION ──────────────────────────────────────────
+            let tx = 0, rb = 0, sc = 0;
+            if (isOld) {
+                let o1=0, o2=0, o3=0;
+                if (ti > 250000)  o1 = Math.min(ti, 500000)  - 250000;
+                if (ti > 500000)  o2 = Math.min(ti, 1000000) - 500000;
+                if (ti > 1000000) o3 = ti - 1000000;
+                tx = o1*0.05 + o2*0.20 + o3*0.30;
+                tx = Math.round(tx / 10) * 10;
+                if (ti <= 500000) rb = Math.min(tx, 12500);
+            } else {
+                // New Regime FY 2024-25 (AY 2025-26)
+                let n1=0, n2_=0, n3=0, n4=0, n5=0;
+                if (ti > 300000)  n1  = Math.min(ti, 700000)  - 300000;
+                if (ti > 700000)  n2_ = Math.min(ti, 1000000) - 700000;
+                if (ti > 1000000) n3  = Math.min(ti, 1200000) - 1000000;
+                if (ti > 1200000) n4  = Math.min(ti, 1500000) - 1200000;
+                if (ti > 1500000) n5  = ti - 1500000;
+                tx = n1*0.05 + n2_*0.10 + n3*0.15 + n4*0.20 + n5*0.30;
+                tx = Math.round(tx / 10) * 10;
+                if (ti <= 700000) rb = Math.min(tx, 25000);
+            }
+            const tar = Math.max(0, tx - rb);
+            if (ti > 5000000) {
+                if (ti <= 10000000)      sc = tar * 0.10;
+                else if (ti <= 20000000) sc = tar * 0.15;
+                else                      sc = tar * 0.25;
+                sc = Math.min(sc, ti - 5000000);
+                sc = Math.round(sc / 10) * 10;
+            }
+            const css  = Math.round(((tar + sc) * 0.04) / 10) * 10;
+            const ttl  = tar + sc + css;
+
+            // ── INTEREST & LATE FEE ──────────────────────────────────────
+            const i234A = gn('int234A');
+            const i234B = gn('int234B');
+            const i234C = gn('int234C');
+            const lf234F = gn('lateFee234F');
+            const totalInt = i234A + i234B + i234C;
+            const totalIntAndFee = totalInt + lf234F;
+
+            // ── TAX PAID ─────────────────────────────────────────────────
+            const t1  = collectAllTDS1().reduce((s, t) => s + toInt(t.tds), 0);
+            const t2  = collectAllTDS2().reduce((s, t) => s + toInt(t.tds), 0);
+            const tcs = collectAllTCS().reduce((s, t)  => s + toInt(t.collected), 0);
+            const adv = collectAllAdvanceTax().reduce((s, a) => s + toInt(a.amount), 0);
+            const slf = collectAllSelfTax().reduce((s, a) => s + toInt(a.amount), 0);
+            const tpd = t1 + t2 + tcs + adv + slf;
+
+            const grandLiability = ttl + totalIntAndFee;
+            const bal = grandLiability - tpd;
+            const ref = bal < 0 ? Math.abs(bal) : 0;
+            const pay = bal > 0 ? bal : 0;
+
+            // ── FILING STATUS ────────────────────────────────────────────
+            const filingSec = g('filingSection') || '139(1)';
+            const retFileSec = filingSec === '139(1)' ? 11
+                             : filingSec === '139(4)' ? 12
+                             : filingSec === '139(5)' ? 17
+                             : 11;
+
+            // ── BANK ACCOUNTS ─────────────────────────────────────────────
+            const bankAccts = collectAllBankAccounts();
+
+            const sanitize = (obj) => JSON.parse(JSON.stringify(obj, (k, v) =>
+                (v === undefined || v === null || (typeof v === 'number' && isNaN(v)))
+                    ? (typeof v === 'number' ? 0 : '') : v
+            ));
+
+            return sanitize({ "ITR": { "ITR1": {
+                "CreationInfo": {
+                    "SWVersionNo": "R8", "SWCreatedBy": "SW90002526",
+                    "JSONCreatedBy": "ITR_Assistant",
+                    "JSONCreationDate": formatDate(null),
+                    "IntermediaryCity": g('city') || "Delhi", "Digest": ""
+                },
+                "Form_ITR1": {
+                    "FormName": "ITR-1",
+                    "Description": "For Indls having Income from Salary, Pension, family pension and Interest",
+                    "AssessmentYear": "2025", "SchemaVer": "Ver1.0", "FormVer": "Ver1.0"
+                },
+                "PersonalInfo": {
+                    "AssesseeName": {
+                        "FirstName": g('firstName').toUpperCase(),
+                        "MiddleName": g('middleName').toUpperCase(),
+                        "SurNameOrOrgName": g('lastName').toUpperCase()
+                    },
+                    "PAN": g('pan').toUpperCase(),
+                    "Address": {
+                        "ResidenceNo": g('flatNo'),
+                        "ResidenceName": g('premises'),
+                        "RoadOrStreet": g('street'),
+                        "LocalityOrArea": g('locality'),
+                        "CityOrTownOrDistrict": g('city'),
+                        "StateCode": g('state'),
+                        "CountryCode": 91, "CountryName": "INDIA",
+                        "PinCode": parseInt(g('pincode')) || 0,
+                        "CountryCodeMobile": 91,
+                        "MobileNo": parseInt(g('mobile')) || 0,
+                        "EmailAddress": g('email')
+                    },
+                    "DOB": formatDate(g('dob')),
+                    "Gender": (g('gender') || 'M').toUpperCase(),
+                    "Status": "INDV",
+                    "EmployerCategory": g('employmentNature'),
+                    "AadhaarCardNo": g('aadhaar'),
+                    "ResidentialStatus": g('resStatus') === 'NRI' ? 'NRI' : g('resStatus') === 'RNOR' ? 'RNOR' : 'RES'
+                },
+                "FilingStatus": {
+                    "ReturnFileSec": retFileSec,
+                    "SeventhProvisio139": g('beforeDueDate') === 'N' ? 'Y' : 'N',
+                    "OptOutNewTaxRegime": isOld ? "Y" : "N",
+                    "ItrFilingDueDate": "2025-07-31",
+                    "clauseiv7provisio139i": "N"
+                },
+                "ITR1_IncomeDeductions": {
+                    "GrossSalary": toInt(ts),   // gross = basic+DA+perq+pl (before sec10)
+                    "Salary": toInt(gs),         // basic salary component
+                    "PerquisitesValue": toInt(pq),
+                    "ProfitsInSalary": toInt(pl),
+                    "Increliefus89A": 0, "Increliefus89AOS": 0,
+                    "IncomeNotified89AType": [], "IncomeNotified89A": 0, "IncomeNotifiedOther89A": 0,
+                    "AllwncExemptUs10": {
+                        "TotalAllwncExemptUs10": toInt(ea),
+                        "AllwncExemptUs10Dtls": ea > 0 ? [{"SalNatureDesc": "10(13A)", "SalOthAmount": toInt(ea)}] : []
+                    },
+                    "NetSalary": toInt(ns),
+                    "DeductionUs16": toInt(sd),
+                    "DeductionUs16ia": toInt(sd),
+                    "EntertainmentAlw16ii": toInt(et),
+                    "ProfessionalTaxUs16iii": toInt(pt),
+                    "IncomeFromSal": toInt(sal),
+                    "TypeOfHP": hasHP ? hpt : "",
+                    "GrossRentReceived": toInt(rent),
+                    "TaxPaidlocalAuth": toInt(mtax),
+                    "AnnualValue": toInt(av),
+                    "StandardDeduction": toInt(av * 0.3),
+                    "InterestPayable": toInt(hint),
+                    "ArrearsUnrealizedRentRcvd": toInt(arrears),
+                    "TotalIncomeOfHP": toInt(hpinc),
+                    "IncomeOthSrc": toInt(os),
+                    "OthersInc": {"OthersIncDtlsOthSrc": othSrcDtls},
+                    "DeductionUs57iia": toInt(fpDed),
+                    "GrossTotIncome": toInt(gti),
+                    "GrossTotIncomeIncLTCG112A": toInt(gti),
+                    "UsrDeductUndChapVIA": {
+                        "Section80C": c80, "Section80CCC": 0,
+                        "Section80CCDEmployeeOrSE": 0, "Section80CCD1B": toInt(n1b),
+                        "Section80CCDEmployer": toInt(n2), "Section80D": toInt(d80),
+                        "Section80DD": toInt(dd), "Section80DDB": toInt(ddb),
+                        "Section80E": toInt(el), "Section80EE": toInt(ee),
+                        "Section80EEA": toInt(eea), "Section80EEB": 0,
+                        "Section80G": toInt(g80), "Section80GG": 0,
+                        "Section80GGA": 0, "Section80GGC": 0, "AnyOthSec80CCH": 0,
+                        "Section80U": toInt(u80), "Section80TTA": toInt(tta),
+                        "Section80TTB": toInt(ttb), "TotalChapVIADeductions": toInt(ded)
+                    },
+                    "DeductUndChapVIA": {
+                        "Section80C": c80, "Section80CCC": 0,
+                        "Section80CCDEmployeeOrSE": 0, "Section80CCD1B": toInt(n1b),
+                        "Section80CCDEmployer": toInt(n2), "Section80D": toInt(d80),
+                        "Section80DD": toInt(dd), "Section80DDB": toInt(ddb),
+                        "Section80E": toInt(el), "Section80EE": toInt(ee),
+                        "Section80EEA": toInt(eea), "Section80EEB": 0,
+                        "Section80G": toInt(g80), "Section80GG": 0,
+                        "Section80GGA": 0, "Section80GGC": 0, "AnyOthSec80CCH": 0,
+                        "Section80U": toInt(u80), "Section80TTA": toInt(tta),
+                        "Section80TTB": toInt(ttb), "TotalChapVIADeductions": toInt(ded)
+                    },
+                    "TotalIncome": toInt(ti),
+                    "ExemptIncAgriOthUs10": {
+                        "ExemptIncAgriOthUs10Dtls": exemptDtls,
+                        "ExemptIncAgriOthUs10Total": toInt(totalExempt)
+                    }
+                },
+                "ITR1_TaxComputation": {
+                    "TotalTaxPayable": toInt(tx),
+                    "Rebate87A": toInt(rb),
+                    "TaxPayableOnRebate": toInt(tar),
+                    "EducationCess": toInt(css),
+                    "GrossTaxLiability": toInt(ttl),
+                    "Section89": 0,
+                    "NetTaxLiability": toInt(ttl),
+                    "TotalIntrstPay": toInt(totalIntAndFee),
+                    "IntrstPay": {
+                        "IntrstPayUs234A": toInt(i234A),
+                        "IntrstPayUs234B": toInt(i234B),
+                        "IntrstPayUs234C": toInt(i234C),
+                        "LateFilingFee234F": toInt(lf234F)
+                    },
+                    "TotTaxPlusIntrstPay": toInt(ttl + totalIntAndFee)
+                },
+                "LTCG112A": {"TotSaleCnsdrn": 0, "TotCstAcqisn": 0, "LongCap112A": 0},
+                "TaxPaid": {
+                    "TaxesPaid": {
+                        "AdvanceTax": toInt(adv), "TDS": toInt(t1 + t2),
+                        "TCS": toInt(tcs), "SelfAssessmentTax": toInt(slf),
+                        "TotalTaxesPaid": toInt(tpd)
+                    },
+                    "BalTaxPayable": toInt(pay)
+                },
+                "Refund": {
+                    "RefundDue": toInt(ref),
+                    "BankAccountDtls": {
+                        "AddtnlBankDetails": bankAccts.length > 0
+                            ? bankAccts.map(b => ({
+                                "IFSCCode": (b.ifsc || '').toUpperCase(),
+                                "BankName": (b.bankName || '').toUpperCase(),
+                                "BankAccountNo": b.accountNo || '',
+                                "AccountType": b.accountType === 'CR' ? 'CA' : 'SB',
+                                "UseForRefund": b.useForRefund ? "true" : "false",
+                                "PrimaryAccount": b.useForRefund ? "true" : "false",
+                                "PreValidated": "true"
+                            }))
+                            : [{"IFSCCode": "", "BankName": "", "BankAccountNo": "", "AccountType": "SB", "UseForRefund": "false", "PrimaryAccount": "false", "PreValidated": "false"}]
+                    }
+                },
+                "Verification": {
+                    "Declaration": {
+                        "AssesseeVerName": `${g('firstName').toUpperCase()} ${g('middleName').toUpperCase()} ${g('lastName').toUpperCase()}`.replace(/\s+/g,' ').trim(),
+                        "FatherName": g('fatherName').toUpperCase(),
+                        "AssesseeVerPAN": g('pan').toUpperCase()
+                    },
+                    "Capacity": g('capacity'),
+                    "Place": (g('place') || g('city')).toUpperCase()
+                },
+                "TDSonSalaries": {
+                    "TDSonSalary": collectAllTDS1().map(t => ({
+                        "EmployerOrDeductorOrCollectDetl": {"TAN": t.tan.toUpperCase(), "EmployerOrDeductorOrCollecterName": t.name.toUpperCase()},
+                        "IncChrgSal": toInt(t.income), "TotalTDSSal": toInt(t.tds)
+                    })),
+                    "TotalTDSonSalaries": toInt(t1)
+                },
+                "TDSonOthThanSals": {
+                    "TDSonOthThanSal": collectAllTDS2().map(t => ({
+                        "EmployerOrDeductorOrCollectDetl": {"TAN": t.tan.toUpperCase(), "EmployerOrDeductorOrCollecterName": t.name.toUpperCase()},
+                        "IncChrgOthThanSal": toInt(t.income), "TotalTDSOthThanSal": toInt(t.tds)
+                    })),
+                    "TotalTDSonOthThanSals": toInt(t2)
+                },
+                "ScheduleTDS3Dtls": {"TDS3Details": [], "TotalTDS3Details": 0},
+                "ScheduleTCS": {
+                    "TCS": collectAllTCS().map(t => ({
+                        "EmployerOrDeductorOrCollectDetl": {"TAN": t.tan.toUpperCase(), "EmployerOrDeductorOrCollecterName": t.name.toUpperCase()},
+                        "AmtChrgTCS": toInt(t.amount), "TotalTCS": toInt(t.collected)
+                    })),
+                    "TotalSchTCS": toInt(tcs)
+                },
+                "TaxPayments": {
+                    "TaxPayment": [
+                        ...collectAllAdvanceTax().map(a => ({"BSRCode": a.bsr, "DateDep": a.date, "SrlNoOfChaln": parseInt(a.serial)||0, "Amt": toInt(a.amount)})),
+                        ...collectAllSelfTax().map(a =>   ({"BSRCode": a.bsr, "DateDep": a.date, "SrlNoOfChaln": parseInt(a.serial)||0, "Amt": toInt(a.amount)}))
+                    ],
+                    "TotalTaxPayments": toInt(adv + slf)
+                },
+                "ScheduleIT": {"ITDtls": []},
+                "ScheduleAMT": {"AdjustedTotalIncome": 0, "AmountPayableUs115JC": 0},
+                "ScheduleCGFor23": {"ShortTermCapGain23": [], "LongTermCapGain23": []},
+                "ScheduleOS": {"IncOSVal": toInt(os), "IncOSDtls": []},
+                "ScheduleIF": {"ScheduleIFDtls": []},
+                "ScheduleTR": {"ScheduleTRDtls": []},
+                "ScheduleFSI": {"TotalFSI": 0},
+                "ScheduleAL": {"ExemptIncAgri": toInt(agri), "ExemptIncAgriUs10Other": toInt(totalExempt - agri)},
+                "Schedule5A": {"TotalInc5A": 0},
+                "ScheduleEI": {"TotalExemptIncRecvd": toInt(totalExempt)}
+            }}});
+        }
+
+        function downloadJSON() {
+            // 1. Validate first
+            const required = ['firstName', 'lastName', 'pan', 'aadhaar', 'dob', 'mobile', 'email', 'city', 'pincode'];
+            const errors = [];
+            required.forEach(id => { if (!validateField(id)) errors.push(id); });
+            if (errors.length > 0) {
+                toast('Please fix required fields: ' + errors.join(', '), 'error');
+                return;
+            }
+            // 2. Build JSON
+            try {
+                const json = buildITR1JSON();
+                const pan  = document.getElementById('pan')?.value?.toUpperCase() || 'ITR1';
+                const blob = new Blob([JSON.stringify(json, null, 2)], { type: 'application/json' });
+                const url  = URL.createObjectURL(blob);
+                const a    = document.createElement('a');
+                a.href     = url;
+                a.download = `ITR1_${pan}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+                toast('ITR-1 JSON downloaded!', 'success');
+            } catch(e) {
+                console.error(e);
+                toast('Error generating JSON: ' + e.message, 'error');
+            }
+        }
+
+        // Initialize
+        // ─── SYSTEM INTEGRATION HELPERS ──────────────────────────────────
+        function toast(msg, type = 'info') {
+            const c = document.getElementById('toastContainer');
+            if (!c) return;
+            const el = document.createElement('div');
+            el.className = `toast ${type}`;
+            el.innerHTML = `<span>${{success:'✅',error:'❌',info:'ℹ️'}[type]||'ℹ️'}</span><span>${msg}</span>`;
+            c.appendChild(el);
+            setTimeout(() => { el.style.opacity='0'; el.style.transition='opacity 0.4s'; setTimeout(()=>el.remove(),400); }, 3500);
+        }
+
+        function validateField(id) {
+            const el = document.getElementById(id);
+            if (!el) return true;
+            const v = el.value.trim();
+            if (!v) { el.style.border = '2px solid red'; return false; }
+            el.style.border = '';
+            return true;
+        }
+
+        function gatherFormFields() {
+            const fields = {};
+            document.querySelectorAll('[data-key]').forEach(el => { fields[el.dataset.key] = el.value; });
+            return fields;
+        }
+
+        function restoreFormFields(fields) {
+            Object.entries(fields).forEach(([key, val]) => {
+                const el = document.querySelector(`[data-key="${key}"]`);
+                if (el) el.value = val;
+            });
+        }
+
+        function calcFinalTax() { calcTaxPayable(); }
+
+        // fillFormFromJSON: accepts official ITR-1 JSON object and populates all fields
+        function fillFormFromJSON(json) {
+            try {
+                const itr  = json?.ITR?.ITR1;
+                if (!itr) return;
+
+                const pi   = itr.PersonalInfo || {};
+                const name = pi.AssesseeName || {};
+                const addr = pi.Address || {};
+                const inc  = itr.ITR1_IncomeDeductions || {};
+                const fil  = itr.FilingStatus || {};
+                const ver  = itr.Verification?.Declaration || {};
+                const tds1 = itr.TDSonSalaries?.TDSonSalary || [];
+
+                const set = (id, val) => { const el = document.getElementById(id); if (el && val !== undefined && val !== null) el.value = val; };
+
+                // Personal
+                set('firstName',       name.FirstName || '');
+                set('middleName',       name.MiddleName || '');
+                set('lastName',         name.SurNameOrOrgName || '');
+                set('pan',              pi.PAN || '');
+                set('aadhaar',          pi.AadhaarCardNo || '');
+                set('dob',              pi.DOB || '');
+                set('gender',           pi.Gender || 'M');
+                set('resStatus',        pi.ResidentialStatus || 'RES');
+                set('employmentNature', pi.EmployerCategory || '');
+                set('mobile',           addr.MobileNo || '');
+                set('email',            addr.EmailAddress || '');
+
+                // Address
+                set('flatNo',    addr.ResidenceNo || '');
+                set('premises',  addr.ResidenceName || '');
+                set('street',    addr.RoadOrStreet || '');
+                set('locality',  addr.LocalityOrArea || '');
+                set('city',      addr.CityOrTownOrDistrict || '');
+                set('state',     addr.StateCode || '');
+                set('pincode',   addr.PinCode || '');
+
+                // Filing
+                const rfs = fil.ReturnFileSec;
+                set('filingSection', rfs === 12 ? '139(4)' : rfs === 17 ? '139(5)' : '139(1)');
+                set('beforeDueDate', fil.SeventhProvisio139 === 'Y' ? 'N' : 'Y');
+
+                // Salary
+                set('grossSalary',     inc.Salary || 0);
+                set('perquisites',     inc.PerquisitesValue || 0);
+                set('profitsInLieu',   inc.ProfitsInSalary || 0);
+                set('exemptAllowances', inc.AllwncExemptUs10?.TotalAllwncExemptUs10 || 0);
+                set('entertainment',   inc.EntertainmentAlw16ii || 0);
+                set('profTax',         inc.ProfessionalTaxUs16iii || 0);
+
+                // HP
+                if (inc.GrossRentReceived > 0 || inc.TotalIncomeOfHP !== 0) {
+                    const radYes = document.querySelector('input[name="hasProperty"][value="yes"]');
+                    if (radYes) { radYes.checked = true; radYes.dispatchEvent(new Event('change')); }
+                }
+                set('propertyType',  inc.TypeOfHP === 'L' ? 'let' : 'self');
+                set('rent',          inc.GrossRentReceived || 0);
+                set('munTax',        inc.TaxPaidlocalAuth || 0);
+                set('houseInterest', inc.InterestPayable || 0);
+                set('arrears',       inc.ArrearsUnrealizedRentRcvd || 0);
+
+                // Other income (read from OthersIncDtlsOthSrc)
+                const othSrc = inc.OthersInc?.OthersIncDtlsOthSrc || [];
+                let _si=0, _fi=0, _ri=0, _dv=0, _fp=0, _oi=0;
+                othSrc.forEach(o => {
+                    if (o.OthSrcNatureDesc === 'SBI') _si += o.OthSrcOthAmount || 0;
+                    else if (o.OthSrcNatureDesc === 'ITR') _ri += o.OthSrcOthAmount || 0;
+                    else if (o.OthSrcNatureDesc === 'DIV') _dv += o.OthSrcOthAmount || 0;
+                    else if (o.OthSrcNatureDesc === 'FAP') _fp += o.OthSrcOthAmount || 0;
+                    else _fi += o.OthSrcOthAmount || 0;
+                });
+                set('savingsInt',    _si || 0);
+                set('fdInt',         _fi || 0);
+                set('refundInt',     _ri || 0);
+                set('dividend',      _dv || 0);
+                set('familyPension', _fp || 0);
+
+                // Agriculture / exempt income
+                const exemptDtls = inc.ExemptIncAgriOthUs10?.ExemptIncAgriOthUs10Dtls || [];
+                exemptDtls.forEach(e => {
+                    if (e.NatureDesc === 'AGRI') set('agricultureIncome', e.OthAmount || 0);
+                });
+
+                // Chapter VI-A
+                const ded = inc.UsrDeductUndChapVIA || {};
+                set('nps80ccd1b',  ded.Section80CCD1B || 0);
+                set('nps80ccd2',   ded.Section80CCDEmployer || 0);
+                set('eduLoanInt',  ded.Section80E || 0);
+                set('homeLoan80EE', ded.Section80EE || 0);
+                set('homeLoan80EEA', ded.Section80EEA || 0);
+                set('tta',         ded.Section80TTA || 0);
+                set('ttb',         ded.Section80TTB || 0);
+                set('disability',  ded.Section80DD || 0);
+                set('medical',     ded.Section80DDB || 0);
+                set('selfDisability', ded.Section80U || 0);
+
+                // Interest / late fee
+                const intPay = itr.ITR1_TaxComputation?.IntrstPay || {};
+                set('int234A',    intPay.IntrstPayUs234A || 0);
+                set('int234B',    intPay.IntrstPayUs234B || 0);
+                set('int234C',    intPay.IntrstPayUs234C || 0);
+                set('lateFee234F', intPay.LateFilingFee234F || 0);
+
+                // Verification
+                set('fatherName', ver.FatherName || '');
+                set('capacity',   itr.Verification?.Capacity || 'S');
+                set('place',      itr.Verification?.Place || '');
+
+                // TDS on Salaries → row 1
+                if (tds1.length > 0) {
+                    const t = tds1[0];
+                    const td = t.EmployerOrDeductorOrCollectDetl || {};
+                    set('tds1TAN1',    td.TAN || '');
+                    set('tds1Name1',   td.EmployerOrDeductorOrCollecterName || '');
+                    set('tds1Income1', t.IncChrgSal || 0);
+                    set('tds1Amount1', t.TotalTDSSal || 0);
+                    if (tds1.length > 1) { // add extra rows if needed
+                        for (let i = 1; i < tds1.length; i++) {
+                            addTDS1Row();
+                            const td2 = tds1[i].EmployerOrDeductorOrCollectDetl || {};
+                            set(`tds1TAN${i+1}`,    td2.TAN || '');
+                            set(`tds1Name${i+1}`,   td2.EmployerOrDeductorOrCollecterName || '');
+                            set(`tds1Income${i+1}`, tds1[i].IncChrgSal || 0);
+                            set(`tds1Amount${i+1}`, tds1[i].TotalTDSSal || 0);
+                        }
+                    }
+                }
+
+                // Bank accounts
+                const banks = itr.Refund?.BankAccountDtls?.AddtnlBankDetails || [];
+                banks.forEach((b, i) => {
+                    if (i > 0) addBankRow();
+                    const idx = i + 1;
+                    set(`accountNo${idx}`,   b.BankAccountNo || '');
+                    set(`ifsc${idx}`,         b.IFSCCode || '');
+                    set(`bankName${idx}`,     b.BankName || '');
+                    set(`accountType${idx}`,  b.AccountType === 'CA' ? 'CR' : 'SB');
+                    if (b.UseForRefund === 'true') {
+                        const radio = document.querySelector(`input[name="refundAccount"][value="${idx}"]`);
+                        if (radio) radio.checked = true;
+                    }
+                });
+
+                // Recalculate all derived values
+                calcSalary();
+                calcProperty();
+                calcOtherIncome();
+                calcTax();
+                calcTaxPayable();
+
+                toast('Form filled from ITR-1 JSON!', 'success');
+            } catch(e) {
+                console.error('fillFormFromJSON error:', e);
+                toast('Error filling form: ' + e.message, 'error');
+            }
+        }
+
+        // ─── recalc() unified function — required by shared.js sendAIMessage ───
+        function recalc() {
+            calcSalary();
+            if (document.querySelector('input[name="hasProperty"][value="yes"]:checked')) {
+                calcProperty();
+            }
+            calcOtherIncome();
+            if (typeof calc80C === 'function') calc80C();
+            calcDeductions();
+            calcTaxPayable();
+        }
+
+        // ─── DOUBLE-CLICK AI FIELD ASSIST ────────────────────────────────
+        let currentFieldKey = null;
+        document.addEventListener('dblclick', function(e) {
+            const el = e.target;
+            const tag = el.tagName;
+            const text = el.textContent?.trim() || el.innerText?.trim() || '';
+            let fieldEl = null, fieldKey = null;
+
+            if (tag === 'LABEL') {
+                fieldEl = el.closest('.form-group, .form-field')?.querySelector('[data-key]');
+                fieldKey = fieldEl ? fieldEl.getAttribute('data-key') : text;
+            } else if (tag === 'TD') {
+                fieldEl = el.closest('tr')?.querySelector('[data-key]');
+                fieldKey = fieldEl ? fieldEl.getAttribute('data-key') : text;
+            } else if (el.hasAttribute && el.hasAttribute('data-key')) {
+                fieldEl = el;
+                fieldKey = el.getAttribute('data-key');
+            }
+
+            if (!fieldKey) return;
+            currentFieldKey = fieldKey;
+
+            let fieldOptions = null;
+            if (fieldEl && fieldEl.tagName === 'SELECT') {
+                fieldOptions = Array.from(fieldEl.options).map(o => ({ value: o.value, label: o.text }));
+            }
+
+            // Store options for sendAIMessage
+            window._currentFieldOptions = fieldOptions;
+            // openAIAssistant(key, label) — pass the human-readable label text
+            openAIAssistant(fieldKey, text || fieldKey);
+        });
+
+        // Override sendAIMessage to pass field options
+        function sendAIMessageWithOptions() {
+            const input = document.getElementById('aiInput');
+            const userMessage = input?.value?.trim();
+            if (!userMessage) return;
+            sendAIMessage(currentFieldKey, userMessage, window._currentFieldOptions);
+        }
+
+        // ─── DOMContentLoaded ────────────────────────────────────────────
+        document.addEventListener('DOMContentLoaded', () => {
+            // Reset backend session (same as ITR-2)
+            fetch("http://127.0.0.1:8000/reset", { method: "POST" })
+                .then(() => console.log("Session reset — fresh JSON ready"))
+                .catch(() => console.log("Backend not available yet"));
+
+            calcSalary();
+            recalc();
+
+            // Wire validate button
+            document.getElementById('btn-validate')?.addEventListener('click', () => {
+                const required = ['firstName', 'lastName', 'pan', 'aadhaar', 'dob', 'mobile', 'email', 'city', 'pincode'];
+                let errors = [];
+                required.forEach(id => { if (!validateField(id)) errors.push(id); });
+                // Also run format validation
+                const fmtErrors = validateAllFormats ? validateAllFormats() : [];
+                if (errors.length === 0 && fmtErrors.length === 0) {
+                    toast('All validations passed! ✅', 'success');
+                } else {
+                    if (fmtErrors.length > 0) toast(fmtErrors[0], 'error');
+                    else toast('Required fields missing: ' + errors.join(', '), 'error');
+                }
+            });
+
+            // Wire download button
+            document.getElementById('btn-download')?.addEventListener('click', downloadJSON);
+
+            // Enter key sends AI message (Shift+Enter = newline, like ITR-2)
+            document.getElementById('aiInput')?.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendAIMessage();
+                }
+            });
+
+            // Wire all data-key fields for live recalc (matches ITR-2 approach)
+            document.querySelectorAll('[data-key]').forEach(el => {
+                el.addEventListener('input', () => recalc());
+            });
+        });
+
+        // Toggle functions
+        function toggleDirector(show) {
+            document.getElementById('directorSection').classList.toggle('hidden', !show);
+        }
+
+        function toggleShares(show) {
+            document.getElementById('sharesSection').classList.toggle('hidden', !show);
+        }
+
+        function toggleCoOwner(show) {
+            document.getElementById('coOwnerSection').classList.toggle('hidden', !show);
+        }
+
+        // Add row functions
+        function addShareRow() {
+            shareRowCount++;
+            const table = document.getElementById('sharesTable');
+            const row = table.insertRow();
+            row.innerHTML = `
+                <td><input type="text" id="shareCompany${shareRowCount}"></td>
+                <td><input type="text" id="sharePAN${shareRowCount}" maxlength="10"></td>
+                <td><input type="number" id="shareOpening${shareRowCount}" value="0"></td>
+                <td><input type="number" id="shareAcquired${shareRowCount}" value="0"></td>
+                <td><input type="number" id="shareTransferred${shareRowCount}" value="0"></td>
+                <td><input type="number" id="shareClosing${shareRowCount}" value="0"></td>
+                <td><input type="number" id="shareCost${shareRowCount}" value="0"></td>
+                <td><button type="button" class="btn btn-secondary" onclick="this.closest('tr').remove()">-</button></td>
+            `;
+        }
+
+        function addBankRow() {
+            bankRowCount++;
+            const table = document.getElementById('bankAccountsTable');
+            const row = table.insertRow();
+            row.innerHTML = `
+                <td><input type="text" id="accountNo${bankRowCount}" required></td>
+                <td><input type="text" id="ifsc${bankRowCount}" maxlength="11" required></td>
+                <td><input type="text" id="bankName${bankRowCount}" required></td>
+                <td><select id="accountType${bankRowCount}" required><option value="SB">Savings</option><option value="CR">Current</option></select></td>
+                <td><input type="radio" name="refundAccount" value="${bankRowCount}"></td>
+                <td><button type="button" class="btn btn-secondary" onclick="this.closest('tr').remove()">-</button></td>
+            `;
+        }
+
+        function addDonationRow() {
+            donationRowCount++;
+            const table = document.getElementById('donationsTable');
+            const row = table.insertRow();
+            row.innerHTML = `
+                <td><input type="text" id="doneeName${donationRowCount}"></td>
+                <td><input type="text" id="doneePAN${donationRowCount}" maxlength="10"></td>
+                <td><input type="text" id="doneeAddress${donationRowCount}"></td>
+                <td><input type="number" id="donationAmt${donationRowCount}" value="0" oninput="calcDonation(${donationRowCount})"></td>
+                <td><select id="donationPct${donationRowCount}" onchange="calcDonation(${donationRowCount})"><option value="100">100%</option><option value="50">50%</option></select></td>
+                <td><input type="number" id="donationEligible${donationRowCount}" value="0" readonly style="background: #f0f0f0;"></td>
+                <td><button type="button" class="btn btn-secondary" onclick="this.closest('tr').remove(); calcDeductions();">-</button></td>
+            `;
+        }
+
+        function calcDonation(rowNum) {
+            const amt = parseFloat(document.getElementById(`donationAmt${rowNum}`).value) || 0;
+            const pct = parseFloat(document.getElementById(`donationPct${rowNum}`).value) || 100;
+            const eligible = amt * (pct / 100);
+            document.getElementById(`donationEligible${rowNum}`).value = eligible.toFixed(0);
+            calcDeductions();
+        }
+
+        function addTDS1Row() {
+            tds1RowCount++;
+            const table = document.getElementById('tds1Table');
+            const row = table.insertRow();
+            row.innerHTML = `
+                <td><input type="text" id="tds1TAN${tds1RowCount}" maxlength="10"></td>
+                <td><input type="text" id="tds1Name${tds1RowCount}"></td>
+                <td><input type="number" id="tds1Income${tds1RowCount}" value="0" oninput="calcTDS1()"></td>
+                <td><input type="number" id="tds1Amount${tds1RowCount}" value="0" oninput="calcTDS1()"></td>
+                <td><button type="button" class="btn btn-secondary" onclick="this.closest('tr').remove(); calcTDS1();">-</button></td>
+            `;
+        }
+
+        function calcTDS1() {
+            let total = 0;
+            for (let i = 1; i <= tds1RowCount; i++) {
+                const elem = document.getElementById(`tds1Amount${i}`);
+                if (elem) total += parseFloat(elem.value) || 0;
+            }
+            document.getElementById('totalTDS1').textContent = '₹' + total.toFixed(0);
+            document.getElementById('sumTDS1').textContent = '₹' + total.toFixed(0);
+            calcTaxPayable();
+        }
+
+        function addTDS2Row() {
+            tds2RowCount++;
+            const table = document.getElementById('tds2Table');
+            const row = table.insertRow();
+            row.innerHTML = `
+                <td><input type="text" id="tds2TAN${tds2RowCount}" maxlength="10"></td>
+                <td><input type="text" id="tds2Name${tds2RowCount}"></td>
+                <td><input type="number" id="tds2Income${tds2RowCount}" value="0" oninput="calcTDS2()"></td>
+                <td><input type="number" id="tds2Amount${tds2RowCount}" value="0" oninput="calcTDS2()"></td>
+                <td><button type="button" class="btn btn-secondary" onclick="this.closest('tr').remove(); calcTDS2();">-</button></td>
+            `;
+        }
+
+        function calcTDS2() {
+            let total = 0;
+            for (let i = 1; i <= tds2RowCount; i++) {
+                const elem = document.getElementById(`tds2Amount${i}`);
+                if (elem) total += parseFloat(elem.value) || 0;
+            }
+            document.getElementById('totalTDS2').textContent = '₹' + total.toFixed(0);
+            document.getElementById('sumTDS2').textContent = '₹' + total.toFixed(0);
+            calcTaxPayable();
+        }
+
+        function addTCSRow() {
+            tcsRowCount++;
+            const table = document.getElementById('tcsTable');
+            const row = table.insertRow();
+            row.innerHTML = `
+                <td><input type="text" id="tcsTAN${tcsRowCount}" maxlength="10"></td>
+                <td><input type="text" id="tcsName${tcsRowCount}"></td>
+                <td><input type="number" id="tcsAmount${tcsRowCount}" value="0" oninput="calcTCS()"></td>
+                <td><input type="number" id="tcsCollected${tcsRowCount}" value="0" oninput="calcTCS()"></td>
+                <td><button type="button" class="btn btn-secondary" onclick="this.closest('tr').remove(); calcTCS();">-</button></td>
+            `;
+        }
+
+        function calcTCS() {
+            let total = 0;
+            for (let i = 1; i <= tcsRowCount; i++) {
+                const elem = document.getElementById(`tcsCollected${i}`);
+                if (elem) total += parseFloat(elem.value) || 0;
+            }
+            document.getElementById('totalTCS').textContent = '₹' + total.toFixed(0);
+            document.getElementById('sumTCS').textContent = '₹' + total.toFixed(0);
+            calcTaxPayable();
+        }
+
+        function addAdvanceTaxRow() {
+            advanceTaxRowCount++;
+            const table = document.getElementById('advanceTaxTable');
+            const row = table.insertRow();
+            row.innerHTML = `
+                <td><input type="text" id="advBSR${advanceTaxRowCount}" maxlength="7"></td>
+                <td><input type="date" id="advDate${advanceTaxRowCount}"></td>
+                <td><input type="text" id="advSerial${advanceTaxRowCount}"></td>
+                <td><input type="number" id="advAmount${advanceTaxRowCount}" value="0" oninput="calcAdvanceTax()"></td>
+                <td><button type="button" class="btn btn-secondary" onclick="this.closest('tr').remove(); calcAdvanceTax();">-</button></td>
+            `;
+        }
+
+        function calcAdvanceTax() {
+            let total = 0;
+            for (let i = 1; i <= advanceTaxRowCount; i++) {
+                const elem = document.getElementById(`advAmount${i}`);
+                if (elem) total += parseFloat(elem.value) || 0;
+            }
+            document.getElementById('totalAdvanceTax').textContent = '₹' + total.toFixed(0);
+            document.getElementById('sumAdvance').textContent = '₹' + total.toFixed(0);
+            calcTaxPayable();
+        }
+
+        function addSelfTaxRow() {
+            selfTaxRowCount++;
+            const table = document.getElementById('selfTaxTable');
+            const row = table.insertRow();
+            row.innerHTML = `
+                <td><input type="text" id="selfBSR${selfTaxRowCount}" maxlength="7"></td>
+                <td><input type="date" id="selfDate${selfTaxRowCount}"></td>
+                <td><input type="text" id="selfSerial${selfTaxRowCount}"></td>
+                <td><input type="number" id="selfAmount${selfTaxRowCount}" value="0" oninput="calcSelfTax()"></td>
+                <td><button type="button" class="btn btn-secondary" onclick="this.closest('tr').remove(); calcSelfTax();">-</button></td>
+            `;
+        }
+
+        function calcSelfTax() {
+            let total = 0;
+            for (let i = 1; i <= selfTaxRowCount; i++) {
+                const elem = document.getElementById(`selfAmount${i}`);
+                if (elem) total += parseFloat(elem.value) || 0;
+            }
+            document.getElementById('totalSelfTax').textContent = '₹' + total.toFixed(0);
+            document.getElementById('sumSelf').textContent = '₹' + total.toFixed(0);
+            calcTaxPayable();
+        }
+
+        // =====================================================================
+        // IMPORT FROM ITR-2 JSON
+        // Maps ITR-2 R8 JSON fields → ITR-1 form fields
+        // Capital gains / CFL / CYLA specific fields are skipped (not in ITR-1)
+        // =====================================================================
+        function importFromITR2JSON() {
+            const fileInput = document.getElementById('itr2JsonFile');
+            const statusEl  = document.getElementById('itr2ImportStatus');
+
+            if (!fileInput.files.length) {
+                statusEl.textContent = '⚠ Please select an ITR-2 JSON file first.';
+                statusEl.style.color = '#f59e0b';
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const raw  = JSON.parse(e.target.result);
+                    // Support both wrapped { ITR: { ITR2: ... } } and flat objects
+                    const itr2 = raw?.ITR?.ITR2 || raw;
+                    _fillFromITR2(itr2);
+                    statusEl.textContent = '✅ ITR-2 data imported successfully! Review and complete any missing fields.';
+                    statusEl.style.color = '#10b981';
+                    // Ensure main sections visible
+                    const ms = document.getElementById('mainSections');
+                    if (ms) ms.classList.add('visible');
+                } catch (err) {
+                    statusEl.textContent = '❌ Failed to parse JSON: ' + err.message;
+                    statusEl.style.color = '#ef4444';
+                }
+            };
+            reader.readAsText(fileInput.files[0]);
+        }
+
+        function _fillFromITR2(itr2) {
+            const set = (id, val) => {
+                if (val === undefined || val === null) return;
+                const el = document.getElementById(id);
+                if (el) { el.value = val; el.dispatchEvent(new Event('input')); }
+            };
+
+            // ── Personal Info ──────────────────────────────────────────────
+            const pi   = itr2?.PartA_GEN1?.PersonalInfo   || {};
+            const addr = pi.Address                        || {};
+            const name = pi.AssesseeName                  || {};
+            const fil  = itr2?.PartA_GEN1?.FilingStatus   || {};
+
+            set('firstName',  name.FirstName  || '');
+            set('middleName', name.MiddleName || '');
+            set('lastName',   name.SurNameOrOrgName || '');
+            set('pan',        pi.PAN || '');
+            set('aadhaar',    pi.AadhaarCardNo || '');
+            // DOB: ITR-2 stores as DD/MM/YYYY — convert to YYYY-MM-DD for <input type=date>
+            if (pi.DOB) {
+                const d = pi.DOB;
+                const iso = d.includes('/') ? d.split('/').reverse().join('-') : d;
+                set('dob', iso);
+            }
+            set('mobile',   String(addr.MobileNo || ''));
+            set('email',    addr.EmailAddress || '');
+            // Address
+            set('flatNo',   addr.ResidenceNo   || '');
+            set('premises', addr.ResidenceName  || '');
+            set('street',   addr.RoadOrStreet   || '');
+            set('locality', addr.LocalityOrArea || '');
+            set('city',     addr.CityOrTownOrDistrict || '');
+            // State code mapping: ITR-2 uses numeric, ITR-1 select uses string values
+            if (addr.StateCode) set('state', String(addr.StateCode));
+            set('pincode',  String(addr.PinCode || ''));
+            // Residential status
+            const rs = pi.ResidentialStatus || fil.ResidentialStatus || 'RES';
+            set('resStatus', rs);
+
+            // Father name (in Verification in ITR-2)
+            const verDecl = itr2?.Verification?.Declaration || {};
+            set('fatherName',   verDecl.FatherName || '');
+            set('verifierName', verDecl.AssesseeVerName || '');
+
+            // Regime
+            const isOld = fil.OptOutNewTaxRegime === 'Y';
+            const regimeVal = isOld ? 'old' : 'new';
+            // Trigger regime change UI
+            const regimeRadio = document.querySelector(`input[name="regime"][value="${regimeVal}"]`);
+            if (regimeRadio) { regimeRadio.checked = true; changeRegime(regimeVal); }
+
+            // ── Salary Income ──────────────────────────────────────────────
+            const schedS = itr2?.ScheduleS || {};
+            // ITR-2 ScheduleS fields → ITR-1 salary fields
+            const grossSal = schedS.TotalGrossSalary || 0;
+            const exemptUs10 = schedS.AllwncExemptUs10?.TotalAllwncExemptUs10 || 0;
+            const stdDedAmt  = schedS.DeductionUs16ia || (isOld ? 50000 : 75000);
+            const entAllow   = schedS.EntertainmentAlw16ii || 0;
+            const profTaxAmt = schedS.ProfessionalTaxUs16iii || 0;
+
+            // grossSalary in ITR-1 = Salary (basic component) from ITR-2
+            // ITR-2: TotalGrossSalary = Salary + Perquisites + ProfitsInSalary
+            // We distribute back: set grossSalary = Salary, perquisites, profitsInLieu
+            set('grossSalary',     schedS.Salary       || grossSal);
+            set('perquisites',     schedS.PerquisiteValue || 0);
+            set('profitsInLieu',   schedS.ProfitsInLieuOfSalary || 0);
+            set('exemptAllowances', exemptUs10);
+            set('stdDeduction',    stdDedAmt);
+            set('entertainment',   entAllow);
+            set('profTax',         profTaxAmt);
+            calcSalary();
+
+            // ── House Property ─────────────────────────────────────────────
+            // ITR-2 uses ScheduleHP (array of properties); ITR-1 supports only one
+            const schedHP = itr2?.ScheduleHP?.PropertyDetails || [];
+            if (schedHP.length > 0) {
+                const prop = schedHP[0]; // Take first property
+                const propType = prop.TypeOfHP === 'S' ? 'self' : 'letout';
+                const radYes = document.querySelector('input[name="hasProperty"][value="yes"]');
+                if (radYes) { radYes.checked = true; radYes.dispatchEvent(new Event('change')); }
+                set('propertyType', propType);
+                set('rent',          prop.GrossRentReceived  || 0);
+                set('munTax',        prop.TaxPaidlocalAuth   || 0);
+                set('houseInterest', prop.InterestPayable    || 0);
+                set('arrears',       prop.ArrearsUnrealRentRcvd || 0);
+                calcProperty();
+            }
+
+            // ── Other Sources ──────────────────────────────────────────────
+            // ITR-2 OS income — split into ITR-1 individual fields
+            const schedOS = itr2?.ScheduleOS || {};
+            const othDtls = schedOS.OthersInc?.OthersIncDtlsOthSrc || [];
+            let _si=0, _fi=0, _ri=0, _dv=0, _fp=0, _oi=0;
+            othDtls.forEach(o => {
+                const amt = o.OthSrcOthAmount || 0;
+                switch (o.OthSrcNatureDesc) {
+                    case 'SBI': _si += amt; break;
+                    case 'ITR': _ri += amt; break;
+                    case 'DIV': _dv += amt; break;
+                    case 'FAP': _fp += amt; break;
+                    default:    _fi += amt;
+                }
+            });
+            // Also try flat OS income if no details
+            if (!othDtls.length) {
+                const osTotal = schedOS.OtherSrcThanOwnRaceHorse || 0;
+                _oi = osTotal;
+            }
+            set('savingsInt',    _si);
+            set('fdInt',         _fi);
+            set('refundInt',     _ri);
+            set('dividend',      _dv);
+            set('familyPension', _fp);
+            set('otherIncome',   _oi);
+            calcOtherIncome();
+
+            // ── Agriculture / Exempt Income ───────────────────────────────
+            const agri = itr2?.['PartB-TI']?.NetAgricultureIncomeOrOtherIncomeForRate || 0;
+            set('agricultureIncome', agri);
+
+            // ── Chapter VI-A Deductions (Old Regime only) ─────────────────
+            if (isOld) {
+                const ded = itr2?.ScheduleVIA?.UsrDeductUndChapVIA || {};
+                // 80C: ITR-2 stores total; distribute to ITR-1 as a lump sum in "Other 80C"
+                const c80total = ded.Section80C || 0;
+                // Clear individual fields, put total into "Other 80C Investments"
+                ['lic','ppf','elss','nsc','tuition','homePrincipal','sukanya'].forEach(id => set(id, 0));
+                const other80cEl = document.getElementById('other80c');
+                if (other80cEl) other80cEl.value = c80total;
+                calc80C();
+
+                set('nps80ccd1b',   ded.Section80CCD1B        || 0);
+                set('nps80ccd2',    ded.Section80CCDEmployer   || 0);
+                set('healthSelf',   Math.min(ded.Section80D    || 0, 25000));
+                set('eduLoanInt',   ded.Section80E             || 0);
+                set('homeLoan80EE', ded.Section80EE            || 0);
+                set('homeLoan80EEA', ded.Section80EEA          || 0);
+                set('tta',          ded.Section80TTA           || 0);
+                set('ttb',          ded.Section80TTB           || 0);
+                set('disability',   ded.Section80DD            || 0);
+                set('medical',      ded.Section80DDB           || 0);
+                set('selfDisability', ded.Section80U           || 0);
+                calcDeductions();
+            }
+
+            // ── TDS on Salary ─────────────────────────────────────────────
+            const tds1Entries = itr2?.ScheduleTDS1?.TDSonSalary || [];
+            if (tds1Entries.length > 0) {
+                tds1Entries.forEach((entry, idx) => {
+                    const rowIdx = idx + 1;
+                    if (idx > 0) addTDS1Row();
+                    const td = entry.EmployerOrDeductorOrCollectDetl || {};
+                    set(`tds1TAN${rowIdx}`,    td.TAN                                   || entry.TAN || '');
+                    set(`tds1Name${rowIdx}`,   td.EmployerOrDeductorOrCollecterName      || entry.NameOfDeductor || '');
+                    set(`tds1Income${rowIdx}`, entry.TotalAmtCredited || entry.IncChrgSal || 0);
+                    set(`tds1Amount${rowIdx}`, entry.TDSAmtDeductCollected || entry.TotalTDSSal || 0);
+                });
+                calcTDS1();
+            }
+
+            // ── TDS Other than Salary (TDS2) ──────────────────────────────
+            const tds2Entries = itr2?.ScheduleTDS2?.TDSonOthThanSalary || [];
+            if (tds2Entries.length > 0) {
+                tds2Entries.forEach((entry, idx) => {
+                    const rowIdx = idx + 1;
+                    if (idx > 0) addTDS2Row();
+                    const td = entry.EmployerOrDeductorOrCollectDetl || {};
+                    set(`tds2TAN${rowIdx}`,    td.TAN                                   || entry.TAN || '');
+                    set(`tds2Name${rowIdx}`,   td.EmployerOrDeductorOrCollecterName      || entry.NameOfDeductor || '');
+                    set(`tds2Income${rowIdx}`, entry.TotalAmtCredited                   || 0);
+                    set(`tds2Amount${rowIdx}`, entry.TDSAmtDeductCollected              || 0);
+                });
+                calcTDS2();
+            }
+
+            // ── Advance Tax / Self-Assessment Tax ─────────────────────────
+            const advEntries = itr2?.ScheduleIT?.TaxPayment || [];
+            if (advEntries.length > 0) {
+                advEntries.forEach((entry, idx) => {
+                    const rowIdx = idx + 1;
+                    if (idx > 0) addAdvanceTaxRow();
+                    set(`advBSR${rowIdx}`,    entry.BSRCode     || '');
+                    set(`advDate${rowIdx}`,   entry.DateDep     || '');
+                    set(`advSerial${rowIdx}`, entry.SrlNoOfChaln || '');
+                    set(`advAmount${rowIdx}`, entry.Amt          || 0);
+                });
+                calcAdvanceTax();
+            }
+
+            // ── Bank Details ───────────────────────────────────────────────
+            const banks = itr2?.ScheduleBank?.BankDetails || [];
+            if (banks.length > 0) {
+                banks.forEach((b, idx) => {
+                    const rowIdx = idx + 1;
+                    if (idx > 0) addBankRow();
+                    set(`accountNo${rowIdx}`,  b.BankAccountNo || '');
+                    set(`ifsc${rowIdx}`,        b.IFSCCode      || '');
+                    set(`bankName${rowIdx}`,    b.BankName      || '');
+                    set(`accountType${rowIdx}`, b.AccountType === 'CA' ? 'CR' : 'SB');
+                });
+            }
+
+            // ── Interest / Late Fee (if any carried forward) ──────────────
+            const intPay = itr2?.PartB_TTI?.ComputationOfTaxLiability?.IntrstPay || {};
+            set('int234A',    intPay.IntrstPayUs234A    || 0);
+            set('int234B',    intPay.IntrstPayUs234B    || 0);
+            set('int234C',    intPay.IntrstPayUs234C    || 0);
+            set('lateFee234F', intPay.LateFilingFee234F || 0);
+
+            // Final recalc
+            calcTaxPayable();
+            toast('ITR-2 fields imported into ITR-1 ✅', 'success');
+        }
+
+        // =====================================================================
+        // ENHANCED fillFormFromJSON  — handles BOTH:
+        //   (A) Official ITR-1 R8 JSON: { ITR: { ITR1: { ... } } }
+        //   (B) Flat backend JSON from /upload endpoint (uses ITR-2 data-key names)
+        // =====================================================================
+        const _originalFillFormFromJSON = fillFormFromJSON;
+        fillFormFromJSON = function(json) {
+            // Detect which format we have
+            if (json?.ITR?.ITR1) {
+                // Format A — standard ITR-1 R8 JSON (original handler)
+                _originalFillFormFromJSON(json);
+                return;
+            }
+            if (json?.ITR?.ITR2) {
+                // Format B — ITR-2 JSON from backend
+                _fillFromITR2(json.ITR.ITR2);
+                return;
+            }
+            // Format C — flat key/value JSON from backend /upload (mixed ITR-1/ITR-2 keys)
+            _fillFromFlatJSON(json);
+        };
+
+        function _fillFromFlatJSON(data) {
+            // Backend may return ITR-2 data-key names; map them to ITR-1 field IDs
+            const keyMap = {
+                // Salary
+                'grossSal':       'grossSalary',
+                'exemptAllow':    'exemptAllowances',
+                'stdDed':         'stdDeduction',
+                'entertainAllow': 'entertainment',
+                'profTax':        'profTax',
+                // Personal
+                'residentialStatus': 'resStatus',
+                'localityOrArea':    'locality',
+                'residenceNo':       'flatNo',
+                // Deductions (ITR-2 key → ITR-1 key)
+                'ded80C':         'other80c',
+                'ded80CCD1B':     'nps80ccd1b',
+                'ded80D':         'healthSelf',
+                'ded80E':         'eduLoanInt',
+                'ded80TTA':       'tta',
+                'ded80TTB':       'ttb',
+                'ded80U':         'selfDisability',
+                // OS income
+                'osIncome':       'otherIncome',
+                'agriIncome':     'agricultureIncome',
+            };
+
+            const set = (id, val) => {
+                if (val === undefined || val === null) return;
+                const el = document.getElementById(id);
+                if (el) { el.value = val; el.dispatchEvent(new Event('input')); }
+            };
+
+            // First pass: use key map for renamed fields
+            Object.entries(data).forEach(([k, v]) => {
+                const target = keyMap[k] || k;
+                set(target, v);
+            });
+
+            // TDS rows from flat JSON
+            if (data.tds && Array.isArray(data.tds)) {
+                data.tds.forEach((r, idx) => {
+                    const rowIdx = idx + 1;
+                    if (idx > 0) addTDS1Row();
+                    set(`tds1TAN${rowIdx}`,    r.tan      || '');
+                    set(`tds1Name${rowIdx}`,   r.employer || r.name || '');
+                    set(`tds1Income${rowIdx}`, r.grossSalary || r.income || 0);
+                    set(`tds1Amount${rowIdx}`, r.amount   || r.tds   || 0);
+                });
+                calcTDS1();
+            }
+
+            if (data.advTax && Array.isArray(data.advTax)) {
+                data.advTax.forEach((r, idx) => {
+                    const rowIdx = idx + 1;
+                    if (idx > 0) addAdvanceTaxRow();
+                    set(`advBSR${rowIdx}`,    r.bsr    || '');
+                    set(`advDate${rowIdx}`,   r.date   || '');
+                    set(`advSerial${rowIdx}`, r.serial || '');
+                    set(`advAmount${rowIdx}`, r.amount || 0);
+                });
+                calcAdvanceTax();
+            }
+
+            // HP rows — take first property for ITR-1
+            if (data.hp && Array.isArray(data.hp) && data.hp.length > 0) {
+                const hp = data.hp[0];
+                const radYes = document.querySelector('input[name="hasProperty"][value="yes"]');
+                if (radYes) { radYes.checked = true; radYes.dispatchEvent(new Event('change')); }
+                const ptype = (hp.type || 'SOP') === 'SOP' ? 'self' : 'letout';
+                set('propertyType', ptype);
+                set('rent',          hp.rent     || 0);
+                set('munTax',        hp.tax      || 0);
+                set('houseInterest', hp.interest || 0);
+                calcProperty();
+            }
+
+            // Regime
+            if (data.regime) {
+                const regimeRadio = document.querySelector(`input[name="regime"][value="${data.regime}"]`);
+                if (regimeRadio) { regimeRadio.checked = true; changeRegime(data.regime); }
+            }
+
+            // Bank details
+            if (data.bankIFSC)   set('ifsc1',       data.bankIFSC);
+            if (data.bankAccNo)  set('accountNo1',  data.bankAccNo);
+            if (data.bankAccType) set('accountType1', data.bankAccType === 'CA' ? 'CR' : 'SB');
+            if (data.bankName)   set('bankName1',   data.bankName);
+
+            calcSalary();
+            calcOtherIncome();
+            calcDeductions();
+            calcTaxPayable();
+        }
+
+
+
+        
+
+
+    </script>
+
+<script>
+// ✅ ITR-1 FIX: Override applyRedaction — always closes modal, handles flat JSON response
+async function applyRedaction() {
+    document.getElementById('aiStatus').innerText = 'Applying redaction...';
+
+    const formData = new FormData();
+    formData.append('file', currentFile, 'original.pdf');
+    formData.append('boxes', JSON.stringify(pageBoxes));
+    formData.append('scale', '1.4');
+
+    try {
+        const response = await fetch('http://127.0.0.1:8000/upload', {
+            method: 'POST',
+            body: formData
+        });
+
+        const data = await response.json();
+
+        // ✅ ALWAYS close modal first
+        document.getElementById('redactModal').style.display = 'none';
+
+        // Support both { updated_data: {...} } and flat { key: value } shapes
+        const payload = data.updated_data ?? data;
+
+        if (!payload || Object.keys(payload).length === 0) {
+            document.getElementById('aiStatus').innerText = 'Extraction failed — no data returned.';
+            return;
+        }
+
+        fillFormFromJSON(payload);
+        document.getElementById('aiStatus').innerText = '✅ Auto-filled successfully!';
+
+    } catch (err) {
+        document.getElementById('redactModal').style.display = 'none';
+        document.getElementById('aiStatus').innerText = '❌ Error: ' + err.message;
+    }
+}
+</script>
+</body>
+</html>

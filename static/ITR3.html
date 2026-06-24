@@ -1,0 +1,2443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ITR-3 Filing Tool — AY 2025-26</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="/static/shared.js"></script>
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg-base:    #111317;
+            --bg-card:    #1c1f26;
+            --bg-input:   #151820;
+            --bg-hover:   #23273a;
+            --border:     #2e3347;
+            --border-hi:  #3d4566;
+            --accent:     #4f8ef7;
+            --accent-dim: #2d5bb5;
+            --green:      #10b981;
+            --red:        #ef4444;
+            --amber:      #f59e0b;
+            --purple:     #8b5cf6;
+            --teal:       #14b8a6;
+            --orange:     #f97316;
+            --text-hi:    #f0f2f8;
+            --text-mid:   #9aa3ba;
+            --text-lo:    #6b7491;
+            --radius:     8px;
+            --radius-lg:  12px;
+        }
+        body {
+            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Inter', sans-serif;
+            background: var(--bg-base);
+            color: var(--text-hi);
+            padding: 24px 20px 120px;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .container { max-width: 1280px; margin: 0 auto; }
+        .page-header {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 32px; padding-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+        .page-header h1 { font-size: 1.6rem; font-weight: 700; color: var(--text-hi); letter-spacing: -0.02em; }
+        .page-header h1 span { color: var(--accent); }
+        .badge { background: var(--accent-dim); color: var(--accent); padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.05em; }
+        .badge-orange { background: rgba(249,115,22,0.2); color: var(--orange); }
+
+        /* REGIME */
+        .regime-section { margin-bottom: 28px; }
+        .regime-section h2 { color: var(--text-mid); font-size: 0.8rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 14px; }
+        .regime-options { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+        .regime-card { background: var(--bg-card); border: 2px solid var(--border); border-radius: var(--radius-lg); padding: 20px; cursor: pointer; transition: border-color 0.2s, background 0.2s; user-select: none; }
+        .regime-card:hover { border-color: var(--border-hi); }
+        .regime-card.selected { border-color: var(--accent); background: rgba(79,142,247,0.07); }
+        .regime-card h3 { color: var(--text-hi); font-size: 1rem; font-weight: 600; margin-bottom: 6px; display: flex; align-items: center; gap: 10px; }
+        .regime-card input[type="radio"] { accent-color: var(--accent); width: 16px; height: 16px; }
+        .regime-card p { color: var(--text-mid); font-size: 0.85rem; }
+
+        /* ACCORDION */
+        .accordion-section { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); margin-bottom: 12px; overflow: hidden; transition: border-color 0.2s; }
+        .accordion-section.active { border-color: var(--border-hi); }
+        .accordion-section.hidden { display: none; }
+        .accordion-header { padding: 18px 24px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none; }
+        .accordion-header:hover { background: var(--bg-hover); }
+        .accordion-header-left { display: flex; align-items: center; gap: 12px; }
+        .accordion-header h3 { color: var(--text-hi); font-size: 0.95rem; font-weight: 600; }
+        .accordion-badge { font-size: 0.7rem; background: rgba(79,142,247,0.15); color: var(--accent); padding: 2px 8px; border-radius: 10px; font-weight: 600; }
+        .accordion-badge.amber { background: rgba(245,158,11,0.15); color: var(--amber); }
+        .accordion-badge.orange { background: rgba(249,115,22,0.15); color: var(--orange); }
+        .accordion-badge.purple { background: rgba(139,92,246,0.15); color: var(--purple); }
+        .accordion-arrow { color: var(--text-lo); font-size: 0.9rem; transition: transform 0.25s; }
+        .accordion-section.active .accordion-arrow { transform: rotate(90deg); }
+        .accordion-content { max-height: 0; overflow: hidden; transition: max-height 0.35s ease; }
+        .accordion-section.active .accordion-content { max-height: 30000px; }
+        .accordion-body { padding: 0 24px 24px; }
+
+        /* FORM */
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin: 16px 0; }
+        .form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0; }
+        .form-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin: 16px 0; }
+        .form-field { display: flex; flex-direction: column; }
+        .form-field label { color: var(--text-mid); margin-bottom: 6px; font-size: 0.78rem; font-weight: 600; letter-spacing: 0.03em; }
+        .form-field input, .form-field select, .form-field textarea { background: var(--bg-input); border: 1px solid var(--border); color: var(--text-hi); padding: 9px 12px; border-radius: var(--radius); font-size: 0.9rem; transition: border-color 0.2s, box-shadow 0.2s; outline: none; }
+        .form-field input:focus, .form-field select:focus, .form-field textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(79,142,247,0.12); }
+        .form-field input.error { border-color: var(--red); }
+        .form-field input.valid { border-color: var(--green); }
+        .error-msg { color: var(--red); font-size: 0.72rem; margin-top: 4px; display: none; align-items: center; gap: 4px; }
+        .error-msg.show { display: flex; }
+        .req { color: var(--red); }
+
+        /* SECTION TITLE */
+        .section-title { color: var(--accent); font-size: 0.8rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; margin: 24px 0 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; }
+        .section-title::before { content: ''; display: block; width: 3px; height: 14px; background: var(--accent); border-radius: 2px; }
+        .section-title.amber { color: var(--amber); }
+        .section-title.amber::before { background: var(--amber); }
+        .section-title.teal { color: var(--teal); }
+        .section-title.teal::before { background: var(--teal); }
+        .section-title.orange { color: var(--orange); }
+        .section-title.orange::before { background: var(--orange); }
+        .section-title.purple { color: var(--purple); }
+        .section-title.purple::before { background: var(--purple); }
+
+        /* TABLE */
+        .table-wrap { overflow-x: auto; margin: 12px 0; border-radius: var(--radius); border: 1px solid var(--border); }
+        table { width: 100%; border-collapse: collapse; background: var(--bg-input); }
+        table th { padding: 10px 14px; text-align: left; background: var(--bg-hover); color: var(--accent); font-weight: 700; font-size: 0.75rem; letter-spacing: 0.05em; text-transform: uppercase; border-bottom: 1px solid var(--border); }
+        table td { padding: 9px 14px; border-bottom: 1px solid rgba(46,51,71,0.5); vertical-align: middle; color: var(--text-hi); font-size: 0.88rem; }
+        table tr:last-child td { border-bottom: none; }
+        table tr:hover td { background: rgba(79,142,247,0.03); }
+        table input, table select { width: 100%; background: var(--bg-card); border: 1px solid var(--border); color: var(--text-hi); padding: 7px 10px; border-radius: 6px; font-size: 0.87rem; outline: none; transition: border-color 0.2s; }
+        table input:focus, table select:focus { border-color: var(--accent); }
+        .total-row td { background: rgba(79,142,247,0.08) !important; font-weight: 700; color: var(--accent) !important; }
+        .subtotal-row td { background: rgba(139,92,246,0.07) !important; font-weight: 600; color: var(--purple) !important; }
+        .computed-cell { color: var(--accent); font-weight: 600; font-size: 0.9rem; }
+        .computed-cell.loss { color: var(--red) !important; }
+        .computed-cell.gain { color: var(--green) !important; }
+
+        /* BUTTONS */
+        .btn { padding: 9px 18px; border: none; border-radius: var(--radius); cursor: pointer; font-weight: 600; font-size: 0.85rem; transition: opacity 0.2s, transform 0.1s; display: inline-flex; align-items: center; gap: 6px; }
+        .btn:hover { opacity: 0.85; }
+        .btn:active { transform: scale(0.97); }
+        .btn-primary { background: var(--accent); color: #fff; }
+        .btn-success { background: var(--green); color: #fff; }
+        .btn-add { background: var(--purple); color: #fff; padding: 7px 14px; font-size: 0.8rem; margin: 10px 0 6px; }
+        .btn-add.teal { background: var(--teal); }
+        .btn-add.orange { background: var(--orange); }
+        .btn-remove { background: transparent; border: 1px solid var(--red); color: var(--red); padding: 4px 10px; font-size: 0.78rem; border-radius: 5px; }
+        .btn-remove:hover { background: var(--red); color: #fff; }
+
+        /* ACTION BAR */
+        .action-bar { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(28,31,38,0.95); backdrop-filter: blur(12px); border-top: 1px solid var(--border); padding: 14px 24px; display: flex; justify-content: center; align-items: center; gap: 12px; z-index: 200; }
+
+        /* SUMMARY */
+        .summary-box { background: linear-gradient(135deg, rgba(79,142,247,0.15), rgba(139,92,246,0.1)); border: 1px solid rgba(79,142,247,0.3); padding: 24px; border-radius: var(--radius-lg); margin: 8px 0; }
+        .summary-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.06); font-size: 0.95rem; }
+        .summary-row:last-child { border: none; font-size: 1.1rem; font-weight: 700; margin-top: 4px; }
+        .summary-row span:last-child { font-weight: 600; color: var(--text-hi); }
+        .summary-row.tax-row span:last-child { color: var(--amber); }
+        .summary-row.refund-row span:last-child { color: var(--green); }
+        .summary-row.payable-row span:last-child { color: var(--red); }
+        .summary-row.indent { padding-left: 16px; font-size: 0.88rem; color: var(--text-mid); }
+        .summary-row.indent span:first-child { color: var(--text-mid); }
+
+        /* TAX BREAKDOWN */
+        .tax-breakdown { background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-top: 14px; }
+        .tax-breakdown h4 { color: var(--text-mid); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 12px; }
+        .tax-line { display: flex; justify-content: space-between; padding: 5px 0; font-size: 0.85rem; color: var(--text-mid); border-bottom: 1px solid rgba(46,51,71,0.5); }
+        .tax-line.indent { padding-left: 14px; font-size: 0.82rem; }
+        .tax-line:last-child { border: none; color: var(--text-hi); font-weight: 600; }
+        .tax-line span:last-child { color: var(--text-hi); }
+        .tax-line.highlight span:last-child { color: var(--amber); }
+        .tax-line.deduct span:last-child { color: var(--green); }
+        .tax-line.surcharge-line span:last-child { color: var(--red); }
+
+        /* SETOFF GRID */
+        .setoff-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin: 14px 0; }
+        .setoff-card { background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; }
+        .setoff-card label { color: var(--text-mid); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.05em; display: block; margin-bottom: 8px; text-transform: uppercase; }
+        .setoff-card input { width: 100%; background: var(--bg-card); border: 1px solid var(--border); color: var(--text-hi); padding: 8px 10px; border-radius: 6px; font-size: 0.9rem; outline: none; }
+        .setoff-card input:focus { border-color: var(--teal); }
+        .setoff-card .hint { color: var(--text-lo); font-size: 0.72rem; margin-top: 5px; }
+
+        /* TOAST */
+        .toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
+        .toast { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 18px; font-size: 0.88rem; font-weight: 600; display: flex; align-items: center; gap: 10px; animation: slideIn 0.3s ease; box-shadow: 0 8px 30px rgba(0,0,0,0.4); min-width: 260px; }
+        .toast.success { border-color: var(--green); }
+        .toast.error   { border-color: var(--red); }
+        .toast.info    { border-color: var(--accent); }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: none; } }
+
+        /* MISC */
+        .spacer { height: 20px; }
+        .info-note { background: rgba(79,142,247,0.08); border: 1px solid rgba(79,142,247,0.2); border-radius: var(--radius); padding: 10px 14px; color: var(--text-mid); font-size: 0.82rem; margin: 10px 0; }
+        .warn-note { background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.25); border-radius: var(--radius); padding: 10px 14px; color: var(--amber); font-size: 0.82rem; margin: 10px 0; }
+        select option { background: var(--bg-card); }
+        .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .bs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 14px 0; }
+        .bs-panel { background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; }
+        .bs-panel h4 { color: var(--text-mid); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 12px; }
+        .bs-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid rgba(46,51,71,0.3); }
+        .bs-row:last-child { border: none; font-weight: 700; }
+        .bs-row label { color: var(--text-mid); font-size: 0.82rem; flex: 1; }
+        .bs-row input { background: var(--bg-card); border: 1px solid var(--border); color: var(--text-hi); padding: 5px 8px; border-radius: 5px; font-size: 0.85rem; outline: none; width: 140px; }
+        .bs-row input:focus { border-color: var(--accent); }
+        .bs-total { color: var(--accent); font-weight: 700; font-size: 0.9rem; min-width: 100px; text-align: right; }
+        @media (max-width: 700px) { .regime-options, .two-col, .bs-grid { grid-template-columns: 1fr; } .form-grid, .form-grid-3 { grid-template-columns: 1fr; } }
+.ai-panel {
+    position: fixed;
+    top: 0;
+    right: -420px;
+    width: 420px;
+    height: 100vh;
+    background: #0f172a;
+    border-left: 1px solid #1e293b;
+    box-shadow: -5px 0 20px rgba(0,0,0,0.4);
+    display: flex;
+    flex-direction: column;
+    transition: right 0.3s ease;
+    z-index: 9999;
+}
+.ai-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px;
+    border-bottom: 1px solid #1e293b;
+    background: #111827;
+}
+.ai-title { font-weight: 600; font-size: 16px; color: #ffffff; }
+.ai-sub { font-size: 12px; color: #9ca3af; }
+.ai-close { background: none; border: none; font-size: 20px; color: #9ca3af; cursor: pointer; }
+.ai-chat {
+    flex: 1;
+    padding: 16px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+.chat-user {
+    align-self: flex-end;
+    background: #2563eb;
+    color: white;
+    padding: 8px 12px;
+    border-radius: 10px 10px 0 10px;
+    margin-bottom: 10px;
+    max-width: 80%;
+    font-size: 14px;
+}
+.chat-ai {
+    align-self: flex-start;
+    background: #1f2937;
+    color: #10b981;
+    padding: 8px 12px;
+    border-radius: 10px 10px 10px 0;
+    margin-bottom: 14px;
+    max-width: 80%;
+    font-size: 14px;
+}
+.ai-input-area {
+    display: flex;
+    padding: 12px;
+    border-top: 1px solid #1e293b;
+    background: #111827;
+}
+.ai-input-area textarea {
+    flex: 1;
+    resize: none;
+    border-radius: 6px;
+    border: 1px solid #334155;
+    padding: 8px;
+    background: #1e293b;
+    color: white;
+    font-size: 14px;
+    height: 50px;
+}
+.ai-input-area button {
+    margin-left: 8px;
+    padding: 8px 14px;
+    border: none;
+    background: #2563eb;
+    color: white;
+    border-radius: 6px;
+    cursor: pointer;
+}
+.ai-typing { font-size: 13px; color: #9ca3af; margin-bottom: 10px; }
+.redact-page { margin-bottom: 20px; position: relative; }
+.redact-canvas { border: 1px solid #333; cursor: crosshair; }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <div class="page-header">
+        <div>
+            <h1>ITR-<span>3</span> Filing Tool</h1>
+            <div style="color:var(--text-mid);font-size:0.82rem;margin-top:4px;">For Individuals & HUFs having income from Business or Profession — AY 2025-26</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+            <span class="badge badge-orange">ITR-3</span>
+            <span class="badge">AY 2025-26</span>
+        </div>
+    </div>
+
+    <!-- REGIME SELECTION -->
+    <div class="regime-section">
+        <h2>Tax Regime</h2>
+        <div class="regime-options">
+            <div class="regime-card selected" id="newCard" data-regime="new">
+                <h3><input type="radio" name="regime" value="new" checked> New Tax Regime</h3>
+                <p>Default from AY 2024-25. No deductions (80C/80D etc.). Lower slab rates. Rebate up to ₹7L.</p>
+            </div>
+            <div class="regime-card" id="oldCard" data-regime="old">
+                <h3><input type="radio" name="regime" value="old"> Old Tax Regime</h3>
+                <p>Opt-out of new regime. All Chapter VI-A deductions available. Higher slab rates.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI AUTO-FILL BLOCK -->
+<div style="background:#1c1f26;border:1px solid #2e3347;border-radius:12px;padding:20px;margin-bottom:25px;">
+    <h3 style="margin-bottom:10px;">🤖 AI Auto-Fill from PDF</h3>
+    <input type="file" id="aiPdf" accept="application/pdf" style="margin-bottom:10px;">
+    <button class="btn btn-primary" onclick="autoFillFromPDF()">Upload & Auto Fill</button>
+    <p id="aiStatus" style="margin-top:10px;color:#9aa3ba;"></p>
+</div>
+
+
+    <!-- PART A — PERSONAL INFORMATION -->
+    <div class="accordion-section active" id="sec-personal">
+        <div class="accordion-header">
+            <div class="accordion-header-left"><h3>Part A — Personal Information</h3></div>
+            <span class="accordion-arrow">▶</span>
+        </div>
+        <div class="accordion-content"><div class="accordion-body">
+            <div class="form-grid">
+                <div class="form-field"><label>First Name <span class="req">*</span></label><input type="text" id="firstName" data-key="firstName" placeholder="RAJESH"><span class="error-msg" id="err-firstName">⚠ Required</span></div>
+                <div class="form-field"><label>Middle Name</label><input type="text" id="middleName" data-key="middleName" placeholder="KUMAR"></div>
+                <div class="form-field"><label>Last Name <span class="req">*</span></label><input type="text" id="lastName" data-key="lastName" placeholder="SHARMA"><span class="error-msg" id="err-lastName">⚠ Required</span></div>
+                <div class="form-field"><label>PAN <span class="req">*</span></label><input type="text" id="pan" data-key="pan" maxlength="10" placeholder="ABCDE1234F" style="text-transform:uppercase"><span class="error-msg" id="err-pan">⚠ Invalid PAN</span></div>
+                <div class="form-field"><label>Aadhaar Number <span class="req">*</span></label><input type="text" id="aadhaar" data-key="aadhaar" maxlength="12" placeholder="xxxxxxxxxxxx"><span class="error-msg" id="err-aadhaar">⚠ Must be 12 digits</span></div>
+                <div class="form-field"><label>Date of Birth <span class="req">*</span></label><input type="date" id="dob" data-key="dob"><span class="error-msg" id="err-dob">⚠ Required</span></div>
+                <div class="form-field"><label>Status</label><select id="status" data-key="status"><option value="I">Individual</option><option value="H">HUF</option></select></div>
+                <div class="form-field"><label>Residential Status</label>
+                    <select id="residentialStatus" data-key="residentialStatus">
+                        <option value="RES">Resident</option>
+                        <option value="NRI">Non-Resident (NRI)</option>
+                        <option value="RNOR">Resident but Not Ordinarily Resident</option>
+                    </select>
+                </div>
+                <div class="form-field"><label>Mobile <span class="req">*</span></label><input type="tel" id="mobile" data-key="mobile" maxlength="10" placeholder="9876543210"><span class="error-msg" id="err-mobile">⚠ Must be 10 digits</span></div>
+                <div class="form-field"><label>Email <span class="req">*</span></label><input type="email" id="email" data-key="email" placeholder="you@example.com"><span class="error-msg" id="err-email">⚠ Invalid email</span></div>
+                <div class="form-field"><label>Flat / House No.</label><input type="text" id="residenceNo" data-key="residenceNo" placeholder="A-101"></div>
+                <div class="form-field"><label>Locality / Area</label><input type="text" id="localityOrArea" data-key="localityOrArea" placeholder="MG Road"></div>
+                <div class="form-field"><label>City <span class="req">*</span></label><input type="text" id="city" data-key="city" placeholder="Kolhapur"><span class="error-msg" id="err-city">⚠ Required</span></div>
+                <div class="form-field"><label>State</label>
+                    <select id="state" data-key="state">
+                        <option value="01">Andhra Pradesh</option><option value="02">Arunachal Pradesh</option><option value="03">Assam</option><option value="04">Bihar</option><option value="05">Goa</option><option value="06">Gujarat</option><option value="07">Haryana</option><option value="08">Himachal Pradesh</option><option value="09">Jammu & Kashmir</option><option value="10">Karnataka</option><option value="11">Kerala</option><option value="12">Madhya Pradesh</option><option value="13" selected>Maharashtra</option><option value="14">Manipur</option><option value="15">Meghalaya</option><option value="16">Mizoram</option><option value="17">Nagaland</option><option value="18">Orissa</option><option value="19">Punjab</option><option value="20">Rajasthan</option><option value="21">Sikkim</option><option value="22">Tamil Nadu</option><option value="23">Tripura</option><option value="24">Uttar Pradesh</option><option value="25">West Bengal</option><option value="26">Chandigarh</option><option value="29">Delhi</option><option value="32">Chhattisgarh</option><option value="33">Uttarakhand</option><option value="34">Jharkhand</option><option value="36">Telangana</option><option value="37">Ladakh</option>
+                    </select>
+                </div>
+                <div class="form-field"><label>PIN Code <span class="req">*</span></label><input type="text" id="pincode" data-key="pincode" maxlength="6" placeholder="416001"><span class="error-msg" id="err-pincode">⚠ Must be 6 digits</span></div>
+                <div class="form-field"><label>Father's Name</label><input type="text" id="fatherName" data-key="fatherName" placeholder="SURESH SHARMA"></div>
+            </div>
+            <div class="section-title">Nature of Business / Profession</div>
+            <div class="form-grid-2">
+                <div class="form-field"><label>Business / Profession Code</label>
+                    <select id="businessCode" data-key="businessCode">
+                        <option value="04001">Medical Profession (Doctor)</option>
+                        <option value="04002">Legal Profession (Lawyer / CA)</option>
+                        <option value="04003">Engineering</option>
+                        <option value="04004">Architecture</option>
+                        <option value="04005">Accountancy</option>
+                        <option value="04006">Technical Consultancy</option>
+                        <option value="04007">Interior Decoration</option>
+                        <option value="04008">Other Professions (44AA specified)</option>
+                        <option value="04009">Film Artist</option>
+                        <option value="04010">Other Professions</option>
+                        <option value="01001">Manufacturing</option>
+                        <option value="02001">Trading</option>
+                        <option value="03001">Commission Agent</option>
+                        <option value="05001">Other Business</option>
+                    </select>
+                </div>
+                <div class="form-field"><label>Business Name</label><input type="text" id="businessName" data-key="businessName" placeholder="ABC Consulting"></div>
+            </div>
+            <div class="form-grid-2">
+                <div class="form-field"><label>Return Filed Under Section</label>
+                    <select id="returnSection" data-key="returnSection">
+                        <option value="11">139(1) — Original on or before due date</option>
+                        <option value="12">139(4) — Belated return</option>
+                        <option value="17">139(5) — Revised return</option>
+                    </select>
+                </div>
+                <div class="form-field"><label>Audit Required?</label>
+                    <select id="auditRequired" data-key="auditRequired">
+                        <option value="N">No (Presumptive/44ADA/44AE)</option>
+                        <option value="Y">Yes (Books maintained, Audit u/s 44AB)</option>
+                    </select>
+                </div>
+            </div>
+        </div></div>
+    </div>
+
+    <!-- SCHEDULE BP — BUSINESS/PROFESSION INCOME -->
+    <div class="accordion-section" id="sec-bp">
+        <div class="accordion-header">
+            <div class="accordion-header-left">
+                <h3>Schedule BP — Business &amp; Profession Income</h3>
+                <span class="accordion-badge orange">Core ITR-3</span>
+            </div>
+            <span class="accordion-arrow">▶</span>
+        </div>
+        <div class="accordion-content"><div class="accordion-body">
+            <div class="info-note">ITR-3 is for assesses with income from Business/Profession. Enter gross receipts and compute net profit after allowable expenses. If opting for presumptive taxation u/s 44AD/44ADA/44AE, enter deemed profit directly.</div>
+
+            <div class="section-title orange">Presumptive Income (u/s 44AD / 44ADA / 44AE)</div>
+            <div class="warn-note">If you are opting for presumptive taxation, fill this section and leave the regular P&amp;L section blank. For 44AD: 8% of gross receipts (6% if digital). For 44ADA: 50% of gross receipts (Professionals). For 44AE: ₹7,500 per vehicle per month.</div>
+            <div class="form-grid-3">
+                <div class="form-field"><label>Section Opted</label>
+                    <select id="presumptiveSection" data-key="presumptiveSection">
+                        <option value="">None (Regular P&L)</option>
+                        <option value="44AD">44AD — Business (turnover ≤ ₹2 Cr)</option>
+                        <option value="44ADA">44ADA — Professional (receipts ≤ ₹75L)</option>
+                        <option value="44AE">44AE — Transport (≤10 vehicles)</option>
+                    </select>
+                </div>
+                <div class="form-field"><label>Gross Receipts / Turnover (₹)</label><input type="number" id="presumptiveTurnover" data-key="presumptiveTurnover" value="0" min="0"></div>
+                <div class="form-field"><label>Net Profit Declared (₹)</label><input type="number" id="presumptiveProfit" data-key="presumptiveProfit" value="0" min="0"></div>
+            </div>
+
+            <div class="section-title orange">Regular Business / Profession — Profit &amp; Loss</div>
+            <div class="info-note">Fill if NOT opting for presumptive taxation. Enter receipts and expenses from your P&amp;L account.</div>
+            <div class="table-wrap"><table>
+                <tr><td>Gross Receipts / Turnover from Business / Profession</td><td><input type="number" id="grossReceipts" data-key="grossReceipts" value="0" min="0"></td></tr>
+                <tr><td>Cost of Goods Sold / Cost of Services</td><td><input type="number" id="cogs" data-key="cogs" value="0" min="0"></td></tr>
+                <tr class="subtotal-row"><td>Gross Profit (Receipts – COGS)</td><td id="grossProfitCell" class="computed-cell">₹0</td></tr>
+                <tr><td>Salary / Wages to Staff</td><td><input type="number" id="expSalary" data-key="expSalary" value="0" min="0"></td></tr>
+                <tr><td>Rent Paid (Business Premises)</td><td><input type="number" id="expRent" data-key="expRent" value="0" min="0"></td></tr>
+                <tr><td>Repairs &amp; Maintenance</td><td><input type="number" id="expRepairs" data-key="expRepairs" value="0" min="0"></td></tr>
+                <tr><td>Power &amp; Fuel</td><td><input type="number" id="expPowerFuel" data-key="expPowerFuel" value="0" min="0"></td></tr>
+                <tr><td>Depreciation (as per IT Act)</td><td><input type="number" id="expDepreciation" data-key="expDepreciation" value="0" min="0"></td></tr>
+                <tr><td>Professional / Audit Fees</td><td><input type="number" id="expProfFees" data-key="expProfFees" value="0" min="0"></td></tr>
+                <tr><td>Advertisement &amp; Marketing</td><td><input type="number" id="expAdvertisement" data-key="expAdvertisement" value="0" min="0"></td></tr>
+                <tr><td>Travel &amp; Conveyance</td><td><input type="number" id="expTravel" data-key="expTravel" value="0" min="0"></td></tr>
+                <tr><td>Interest on Business Loan (u/s 36(1)(iii))</td><td><input type="number" id="expInterestBusiness" data-key="expInterestBusiness" value="0" min="0"></td></tr>
+                <tr><td>Bad Debts Written Off</td><td><input type="number" id="expBadDebts" data-key="expBadDebts" value="0" min="0"></td></tr>
+                <tr><td>Other Business Expenses (fully allowable)</td><td><input type="number" id="expOther" data-key="expOther" value="0" min="0"></td></tr>
+                <tr><td>Disallowed Expenses u/s 40A(3) / 43B (add back)</td><td><input type="number" id="disallowedExp" data-key="disallowedExp" value="0" min="0"></td></tr>
+                <tr class="total-row"><td>Net Profit from Business / Profession</td><td id="netBPIncome" class="computed-cell">₹0</td></tr>
+            </table></div>
+
+            <div class="section-title orange">Speculative Business Income</div>
+            <div class="form-grid-2">
+                <div class="form-field"><label>Speculative Income (Intraday Trading) (₹)</label><input type="number" id="speculativeIncome" data-key="speculativeIncome" value="0"></div>
+                <div class="form-field"><label>Speculative Loss (₹)</label><input type="number" id="speculativeLoss" data-key="speculativeLoss" value="0" min="0"></div>
+            </div>
+
+            <div class="section-title orange">Income from Specified Business u/s 35AD</div>
+            <div class="form-grid-2">
+                <div class="form-field"><label>Specified Business Income (₹)</label><input type="number" id="specifiedBusIncome" data-key="specifiedBusIncome" value="0" min="0"></div>
+                <div class="form-field"><label>Specified Business Loss (₹)</label><input type="number" id="specifiedBusLoss" data-key="specifiedBusLoss" value="0" min="0"></div>
+            </div>
+        </div></div>
+    </div>
+
+    <!-- PART A — BALANCE SHEET -->
+    <div class="accordion-section" id="sec-bs">
+        <div class="accordion-header">
+            <div class="accordion-header-left">
+                <h3>Part A — Balance Sheet (as on 31-Mar-2025)</h3>
+                <span class="accordion-badge purple">Required for non-presumptive</span>
+            </div>
+            <span class="accordion-arrow">▶</span>
+        </div>
+        <div class="accordion-content"><div class="accordion-body">
+            <div class="info-note">Required if books of accounts are maintained. Skip if opting for presumptive taxation under 44AD/44ADA/44AE.</div>
+            <div class="bs-grid">
+                <!-- LIABILITIES -->
+                <div class="bs-panel">
+                    <h4>Sources of Funds (Liabilities)</h4>
+                    <div class="bs-row"><label>Proprietor's Capital</label><input type="number" data-key="bsPropCap" value="0" min="0"></div>
+                    <div class="bs-row"><label>Reserves &amp; Surplus</label><input type="number" data-key="bsReserves" value="0" min="0"></div>
+                    <div class="bs-row"><label>Secured Loans (Bank)</label><input type="number" data-key="bsSecuredLoans" value="0" min="0"></div>
+                    <div class="bs-row"><label>Unsecured Loans</label><input type="number" data-key="bsUnsecuredLoans" value="0" min="0"></div>
+                    <div class="bs-row"><label>Sundry Creditors</label><input type="number" data-key="bsSundryCred" value="0" min="0"></div>
+                    <div class="bs-row"><label>Other Current Liabilities</label><input type="number" data-key="bsOtherLiab" value="0" min="0"></div>
+                    <div class="bs-row"><label>Provisions (Tax &amp; Others)</label><input type="number" data-key="bsProvisions" value="0" min="0"></div>
+                    <div class="bs-row" style="margin-top:8px;border-top:1px solid var(--border);padding-top:8px;">
+                        <label style="color:var(--accent);font-weight:700;">Total Liabilities</label>
+                        <span class="bs-total" id="bsTotLiab">₹0</span>
+                    </div>
+                </div>
+                <!-- ASSETS -->
+                <div class="bs-panel">
+                    <h4>Application of Funds (Assets)</h4>
+                    <div class="bs-row"><label>Fixed Assets (Net Block)</label><input type="number" data-key="bsFixedAssets" value="0" min="0"></div>
+                    <div class="bs-row"><label>Investments (Long Term)</label><input type="number" data-key="bsLongTermInv" value="0" min="0"></div>
+                    <div class="bs-row"><label>Inventories / Stock</label><input type="number" data-key="bsInventories" value="0" min="0"></div>
+                    <div class="bs-row"><label>Sundry Debtors</label><input type="number" data-key="bsSundryDebtors" value="0" min="0"></div>
+                    <div class="bs-row"><label>Cash &amp; Bank Balance</label><input type="number" data-key="bsCashBank" value="0" min="0"></div>
+                    <div class="bs-row"><label>Loans &amp; Advances (Given)</label><input type="number" data-key="bsLoansAdv" value="0" min="0"></div>
+                    <div class="bs-row"><label>Other Current Assets</label><input type="number" data-key="bsOtherAssets" value="0" min="0"></div>
+                    <div class="bs-row" style="margin-top:8px;border-top:1px solid var(--border);padding-top:8px;">
+                        <label style="color:var(--accent);font-weight:700;">Total Assets</label>
+                        <span class="bs-total" id="bsTotAssets">₹0</span>
+                    </div>
+                </div>
+            </div>
+            <div id="bsBalanceNote" class="info-note" style="display:none;border-color:var(--red);color:var(--red);">⚠ Balance Sheet does not tally! Difference: <span id="bsDiff">₹0</span></div>
+        </div></div>
+    </div>
+
+    <!-- SCHEDULE S — SALARY INCOME -->
+    <div class="accordion-section" id="sec-salary">
+        <div class="accordion-header">
+            <div class="accordion-header-left"><h3>Schedule S — Salary Income (if any)</h3></div>
+            <span class="accordion-arrow">▶</span>
+        </div>
+        <div class="accordion-content"><div class="accordion-body">
+            <div class="info-note">ITR-3 filers can also have salary income (e.g., directors who are also employees). Enter if applicable.</div>
+            <div class="table-wrap"><table>
+                <tr><td>Gross Salary (incl. perquisites &amp; allowances)</td><td><input type="number" id="grossSal" data-key="grossSal" value="0" min="0"></td></tr>
+                <tr><td>Exempt Allowances u/s 10 (HRA, LTA, etc.)</td><td><input type="number" id="exemptAllow" data-key="exemptAllow" value="0" min="0"></td></tr>
+                <tr class="total-row"><td>Net Salary (Gross – Exempt)</td><td id="netSal" class="computed-cell">₹0</td></tr>
+                <tr><td>Standard Deduction u/s 16(ia)</td><td><input type="number" id="stdDed" data-key="stdDed" value="75000" min="0"></td></tr>
+                <tr><td>Entertainment Allowance u/s 16(ii)</td><td><input type="number" id="entertainAllow" data-key="entertainAllow" value="0" min="0"></td></tr>
+                <tr><td>Professional Tax u/s 16(iii)</td><td><input type="number" id="profTax" data-key="profTax" value="0" min="0"></td></tr>
+                <tr class="total-row"><td>Income from Salary (after 16 deductions)</td><td id="incSal" class="computed-cell">₹0</td></tr>
+            </table></div>
+        </div></div>
+    </div>
+
+    <!-- HOUSE PROPERTY -->
+    <div class="accordion-section" id="sec-hp">
+        <div class="accordion-header">
+            <div class="accordion-header-left"><h3>Schedule HP — House Property Income</h3></div>
+            <span class="accordion-arrow">▶</span>
+        </div>
+        <div class="accordion-content"><div class="accordion-body">
+            <div class="info-note">SOP interest deduction capped at ₹2,00,000. Let-out: 30% std deduction on NAV. Total HP loss for set-off capped at ₹2,00,000.</div>
+            <button class="btn btn-add" id="btn-add-hp">+ Add Property</button>
+            <div class="table-wrap"><table>
+                <thead><tr><th>Type</th><th>Annual Rent Received (LOP)</th><th>Municipal Tax Paid</th><th>Interest on Loan</th><th>Net HP Income</th><th style="width:50px"></th></tr></thead>
+                <tbody id="hpBody"></tbody>
+                <tfoot><tr class="total-row"><td colspan="4">Total HP Income (set-off capped at −₹2L)</td><td id="totHP" class="computed-cell">₹0</td><td></td></tr></tfoot>
+            </table></div>
+        </div></div>
+    </div>
+
+    <!-- CAPITAL GAINS -->
+    <div class="accordion-section" id="sec-cg">
+        <div class="accordion-header">
+            <div class="accordion-header-left"><h3>Schedule CG — Capital Gains</h3></div>
+            <span class="accordion-arrow">▶</span>
+        </div>
+        <div class="accordion-content"><div class="accordion-body">
+
+            <div class="section-title">STCG u/s 111A — Equity / Equity MF (STT paid @ 20% w.e.f. 23-Jul-2024)</div>
+            <button class="btn btn-add" id="btn-add-stcg111a">+ Add STCG 111A Transaction</button>
+            <div class="table-wrap"><table>
+                <thead><tr><th>Asset Description</th><th>Sale Price</th><th>Cost of Acquisition</th><th>STCG Gain / (Loss)</th><th style="width:50px"></th></tr></thead>
+                <tbody id="stcg111aBody"></tbody>
+                <tfoot><tr class="total-row"><td colspan="3">Total STCG 111A (@ 20%)</td><td id="totSTCG111A" class="computed-cell">₹0</td><td></td></tr></tfoot>
+            </table></div>
+
+            <div class="section-title">STCG — Other Assets (applicable slab / 30%)</div>
+            <button class="btn btn-add" id="btn-add-stcgOther">+ Add STCG Other</button>
+            <div class="table-wrap"><table>
+                <thead><tr><th>Asset Description</th><th>Sale Price</th><th>Cost</th><th>STCG Gain / (Loss)</th><th style="width:50px"></th></tr></thead>
+                <tbody id="stcgOtherBody"></tbody>
+                <tfoot><tr class="total-row"><td colspan="3">Total STCG Other</td><td id="totSTCGOther" class="computed-cell">₹0</td><td></td></tr></tfoot>
+            </table></div>
+
+            <div class="section-title">LTCG u/s 112A — Equity / Equity MF (@ 12.5% after ₹1.25L exemption)</div>
+            <div class="info-note">₹1,25,000 exemption applies to aggregate LTCG u/s 112A. Only the excess is taxed at 12.5%.</div>
+            <button class="btn btn-add" id="btn-add-ltcg112a">+ Add LTCG 112A Transaction</button>
+            <div class="table-wrap"><table>
+                <thead><tr><th>Asset Description</th><th>Sale Price</th><th>Cost (Grandfathered)</th><th>LTCG Gain / (Loss)</th><th style="width:50px"></th></tr></thead>
+                <tbody id="ltcg112aBody"></tbody>
+                <tfoot><tr class="total-row"><td colspan="3">Total LTCG 112A (gross, before ₹1.25L exemption)</td><td id="totLTCG112A" class="computed-cell">₹0</td><td></td></tr></tfoot>
+            </table></div>
+
+            <div class="section-title">LTCG u/s 112 — Other Assets (@ 20% with indexation)</div>
+            <button class="btn btn-add" id="btn-add-ltcgOther">+ Add LTCG Other</button>
+            <div class="table-wrap"><table>
+                <thead><tr><th>Asset Description</th><th>Sale Price</th><th>Indexed Cost</th><th>LTCG Gain / (Loss)</th><th style="width:50px"></th></tr></thead>
+                <tbody id="ltcgOtherBody"></tbody>
+                <tfoot><tr class="total-row"><td colspan="3">Total LTCG Other (@ 20%)</td><td id="totLTCGOther" class="computed-cell">₹0</td><td></td></tr></tfoot>
+            </table></div>
+
+            <div class="section-title amber">Capital Gains u/s 50 (Depreciable Assets — Short Term)</div>
+            <div class="info-note">Profit on sale of depreciable assets (business assets) is always treated as STCG u/s 50, regardless of holding period.</div>
+            <div class="form-grid-2">
+                <div class="form-field"><label>Full Value of Consideration (₹)</label><input type="number" id="sec50Consideration" data-key="sec50Consideration" value="0" min="0"></div>
+                <div class="form-field"><label>WDV of Block (₹)</label><input type="number" id="sec50WDV" data-key="sec50WDV" value="0" min="0"></div>
+            </div>
+            <div class="table-wrap"><table>
+                <tr class="total-row"><td>STCG u/s 50 (Depreciable Assets)</td><td id="sec50Gain" class="computed-cell">₹0</td></tr>
+            </table></div>
+
+        </div></div>
+    </div>
+
+    <!-- SCHEDULE OS -->
+    <div class="accordion-section" id="sec-os">
+        <div class="accordion-header">
+            <div class="accordion-header-left"><h3>Schedule OS — Income from Other Sources</h3></div>
+            <span class="accordion-arrow">▶</span>
+        </div>
+        <div class="accordion-content"><div class="accordion-body">
+            <div class="table-wrap"><table>
+                <tr><td>Interest from Savings Bank (80TTA eligible)</td><td><input type="number" id="intSavingBank" data-key="intSavingBank" value="0" min="0"></td></tr>
+                <tr><td>Interest from Term Deposit / FD</td><td><input type="number" id="intTermDeposit" data-key="intTermDeposit" value="0" min="0"></td></tr>
+                <tr><td>Interest from Income Tax Refund</td><td><input type="number" id="intITRefund" data-key="intITRefund" value="0" min="0"></td></tr>
+                <tr><td>Other Interest</td><td><input type="number" id="intOthers" data-key="intOthers" value="0" min="0"></td></tr>
+                <tr><td>Dividends (other than DTAA)</td><td><input type="number" id="dividend" data-key="dividend" value="0" min="0"></td></tr>
+                <tr><td>Family Pension</td><td><input type="number" id="familyPension" data-key="familyPension" value="0" min="0"></td></tr>
+                <tr><td>Any Other Income</td><td><input type="number" id="anyOtherIncome" data-key="anyOtherIncome" value="0" min="0"></td></tr>
+                <tr class="total-row"><td>Gross Total from Other Sources</td><td id="totOS" class="computed-cell">₹0</td></tr>
+            </table></div>
+        </div></div>
+    </div>
+
+    <!-- SCHEDULE CYLA / BFLA / CFL -->
+    <div class="accordion-section" id="sec-losses">
+        <div class="accordion-header">
+            <div class="accordion-header-left">
+                <h3>Schedule CYLA / BFLA — Loss Set-Off &amp; Carry Forward</h3>
+                <span class="accordion-badge amber">CFL</span>
+            </div>
+            <span class="accordion-arrow">▶</span>
+        </div>
+        <div class="accordion-content"><div class="accordion-body">
+            <div class="section-title teal">Brought-Forward Losses from Previous Years (Schedule CFL Input)</div>
+            <div class="info-note">Enter losses brought forward from prior years. Business losses (non-speculative) can set off against any business income. HP loss sets off against all heads. Speculative losses only against speculative income.</div>
+            <div class="setoff-grid">
+                <div class="setoff-card">
+                    <label>BF Business Loss (non-speculative)</label>
+                    <input type="number" id="bfBusLoss" data-key="bfBusLoss" value="0" min="0">
+                    <div class="hint">Set off against business income (up to 8 AYs)</div>
+                </div>
+                <div class="setoff-card">
+                    <label>BF Speculative Loss</label>
+                    <input type="number" id="bfSpecLoss" data-key="bfSpecLoss" value="0" min="0">
+                    <div class="hint">Only against speculative income</div>
+                </div>
+                <div class="setoff-card">
+                    <label>BF HP Loss (all prior years)</label>
+                    <input type="number" id="bfHPLoss" data-key="bfHPLoss" value="0" min="0">
+                    <div class="hint">Set off against all income heads</div>
+                </div>
+                <div class="setoff-card">
+                    <label>BF STCG Loss</label>
+                    <input type="number" id="bfSTCGLoss" data-key="bfSTCGLoss" value="0" min="0">
+                    <div class="hint">Set off against STCG &amp; LTCG only</div>
+                </div>
+                <div class="setoff-card">
+                    <label>BF LTCG Loss</label>
+                    <input type="number" id="bfLTCGLoss" data-key="bfLTCGLoss" value="0" min="0">
+                    <div class="hint">Set off against LTCG only</div>
+                </div>
+                <div class="setoff-card">
+                    <label>BF Unabsorbed Depreciation</label>
+                    <input type="number" id="bfUnabsDepr" data-key="bfUnabsDepr" value="0" min="0">
+                    <div class="hint">Set off against any income (indefinitely)</div>
+                </div>
+            </div>
+
+            <div class="section-title teal">Current Year Loss Set-Off (Schedule CYLA — computed)</div>
+            <div class="table-wrap"><table>
+                <thead><tr><th>Head</th><th>Income before Set-Off</th><th>HP Loss Applied</th><th>BF Loss Applied</th><th>Income after Set-Off</th></tr></thead>
+                <tbody>
+                    <tr><td>Salary</td><td id="cyla_sal_before" class="computed-cell">₹0</td><td id="cyla_sal_hp">—</td><td>—</td><td id="cyla_sal_after" class="computed-cell">₹0</td></tr>
+                    <tr><td>Business / Profession</td><td id="cyla_bp_before" class="computed-cell">₹0</td><td id="cyla_bp_hp">—</td><td id="cyla_bp_bf">—</td><td id="cyla_bp_after" class="computed-cell">₹0</td></tr>
+                    <tr><td>STCG 111A</td><td id="cyla_s111a_before" class="computed-cell">₹0</td><td id="cyla_s111a_hp">—</td><td id="cyla_s111a_os">—</td><td id="cyla_s111a_after" class="computed-cell">₹0</td></tr>
+                    <tr><td>STCG Other</td><td id="cyla_soth_before" class="computed-cell">₹0</td><td id="cyla_soth_hp">—</td><td>—</td><td id="cyla_soth_after" class="computed-cell">₹0</td></tr>
+                    <tr><td>LTCG 112A</td><td id="cyla_l112a_before" class="computed-cell">₹0</td><td id="cyla_l112a_hp">—</td><td id="cyla_l112a_os">—</td><td id="cyla_l112a_after" class="computed-cell">₹0</td></tr>
+                    <tr><td>LTCG Other</td><td id="cyla_loth_before" class="computed-cell">₹0</td><td id="cyla_loth_hp">—</td><td id="cyla_loth_os">—</td><td id="cyla_loth_after" class="computed-cell">₹0</td></tr>
+                    <tr><td>Other Sources</td><td id="cyla_os_before" class="computed-cell">₹0</td><td id="cyla_os_hp">—</td><td>—</td><td id="cyla_os_after" class="computed-cell">₹0</td></tr>
+                </tbody>
+                <tfoot>
+                    <tr class="total-row"><td>Gross Total Income after Set-Off</td><td class="computed-cell" colspan="3"></td><td id="cyla_gti_after" class="computed-cell">₹0</td></tr>
+                </tfoot>
+            </table></div>
+
+            <div class="section-title teal">Schedule CFL — Losses Carried Forward to Next Year (computed)</div>
+            <div class="table-wrap"><table>
+                <thead><tr><th>Loss Type</th><th>CY Unabsorbed</th><th>BF Loss Remaining</th><th>Total CF to Next Year</th></tr></thead>
+                <tbody>
+                    <tr><td>Business Loss CF</td><td id="cfl_bus_cy" class="computed-cell">₹0</td><td id="cfl_bus_bf">₹0</td><td id="cfl_bus_total" class="computed-cell">₹0</td></tr>
+                    <tr><td>HP Loss CF</td><td id="cfl_hp_cy" class="computed-cell">₹0</td><td id="cfl_hp_bf">₹0</td><td id="cfl_hp_total" class="computed-cell">₹0</td></tr>
+                    <tr><td>STCG Loss CF</td><td id="cfl_stcg_cy" class="computed-cell">₹0</td><td id="cfl_stcg_bf">₹0</td><td id="cfl_stcg_total" class="computed-cell">₹0</td></tr>
+                    <tr><td>LTCG Loss CF</td><td id="cfl_ltcg_cy" class="computed-cell">₹0</td><td id="cfl_ltcg_bf">₹0</td><td id="cfl_ltcg_total" class="computed-cell">₹0</td></tr>
+                </tbody>
+            </table></div>
+        </div></div>
+    </div>
+
+    <!-- CHAPTER VI-A DEDUCTIONS (Old Regime Only) -->
+    <div class="accordion-section regime-old-section hidden" id="sec-deductions">
+        <div class="accordion-header">
+            <div class="accordion-header-left">
+                <h3>Chapter VI-A Deductions</h3>
+                <span class="accordion-badge">Old Regime Only</span>
+            </div>
+            <span class="accordion-arrow">▶</span>
+        </div>
+        <div class="accordion-content"><div class="accordion-body">
+            <div class="table-wrap"><table>
+                <thead><tr><th>Section</th><th>Description</th><th>Amount Entered</th><th>Eligible (Capped)</th></tr></thead>
+                <tbody>
+                    <tr><td>80C</td><td>LIC, PPF, ELSS, EPF, Home Loan Principal, Tuition Fee (Max ₹1.5L)</td><td><input type="number" id="ded80C" data-key="ded80C" value="0" min="0"></td><td id="ded80C_cap" class="computed-cell">₹0</td></tr>
+                    <tr><td>80CCC</td><td>Pension Fund (combined 80C+CCC cap ₹1.5L)</td><td><input type="number" id="ded80CCC" data-key="ded80CCC" value="0" min="0"></td><td id="ded80CCC_cap" class="computed-cell">₹0</td></tr>
+                    <tr><td>80CCD(1B)</td><td>NPS Additional Contribution (cap ₹50,000)</td><td><input type="number" id="ded80CCD1B" data-key="ded80CCD1B" value="0" min="0"></td><td id="ded80CCD1B_cap" class="computed-cell">₹0</td></tr>
+                    <tr><td>80D</td><td>Health Insurance Premium (self+family+parents)</td><td><input type="number" id="ded80D" data-key="ded80D" value="0" min="0"></td><td id="ded80D_cap" class="computed-cell">₹0</td></tr>
+                    <tr><td>80E</td><td>Interest on Education Loan (no upper limit)</td><td><input type="number" id="ded80E" data-key="ded80E" value="0" min="0"></td><td id="ded80E_cap" class="computed-cell">₹0</td></tr>
+                    <tr><td>80G</td><td>Donations (see qualifying limits)</td><td><input type="number" id="ded80G" data-key="ded80G" value="0" min="0"></td><td id="ded80G_cap" class="computed-cell">₹0</td></tr>
+                    <tr><td>80GG</td><td>Rent paid (where HRA not received, max ₹60K)</td><td><input type="number" id="ded80GG" data-key="ded80GG" value="0" min="0"></td><td id="ded80GG_cap" class="computed-cell">₹0</td></tr>
+                    <tr><td>80TTA</td><td>Savings Bank Interest (max ₹10,000)</td><td><input type="number" id="ded80TTA" data-key="ded80TTA" value="0" min="0"></td><td id="ded80TTA_cap" class="computed-cell">₹0</td></tr>
+                    <tr><td>80TTB</td><td>FD/Savings Interest — Senior Citizens (max ₹50,000)</td><td><input type="number" id="ded80TTB" data-key="ded80TTB" value="0" min="0"></td><td id="ded80TTB_cap" class="computed-cell">₹0</td></tr>
+                    <tr><td>80U</td><td>Person with Disability (₹75K / ₹1.25L severe)</td><td><input type="number" id="ded80U" data-key="ded80U" value="0" min="0"></td><td id="ded80U_cap" class="computed-cell">₹0</td></tr>
+                    <tr><td>80IA / 80IB</td><td>Profits of eligible business (infrastructure, etc.)</td><td><input type="number" id="ded80IA" data-key="ded80IA" value="0" min="0"></td><td id="ded80IA_cap" class="computed-cell">₹0</td></tr>
+                    <tr><td>Other</td><td>Any Other Chapter VI-A Deduction</td><td><input type="number" id="dedOther" data-key="dedOther" value="0" min="0"></td><td id="dedOther_cap" class="computed-cell">₹0</td></tr>
+                </tbody>
+                <tfoot><tr class="total-row"><td colspan="3">Total Chapter VI-A Deductions</td><td id="totDed" class="computed-cell">₹0</td></tr></tfoot>
+            </table></div>
+        </div></div>
+    </div>
+
+    <!-- SCHEDULE DEP — DEPRECIATION -->
+    <div class="accordion-section" id="sec-dep">
+        <div class="accordion-header">
+            <div class="accordion-header-left">
+                <h3>Schedule DEP — Depreciation Summary</h3>
+                <span class="accordion-badge purple">Optional</span>
+            </div>
+            <span class="accordion-arrow">▶</span>
+        </div>
+        <div class="accordion-content"><div class="accordion-body">
+            <div class="info-note">Enter WDV of assets at the beginning and end of year, and total depreciation claimed. This flows into Schedule BP automatically.</div>
+            <div class="table-wrap"><table>
+                <thead><tr><th>Asset Block</th><th>Rate %</th><th>WDV Opening (₹)</th><th>Additions (₹)</th><th>Deletions (₹)</th><th>WDV Closing (₹)</th><th>Depreciation (₹)</th></tr></thead>
+                <tbody id="depBody"></tbody>
+            </table></div>
+            <button class="btn btn-add orange" id="btn-add-dep">+ Add Depreciation Block</button>
+            <div class="table-wrap" style="margin-top:12px;"><table>
+                <tr class="total-row"><td>Total Depreciation (flows to P&L)</td><td id="totDepreciation" class="computed-cell">₹0</td></tr>
+            </table></div>
+        </div></div>
+    </div>
+
+    <!-- TDS & ADVANCE TAX -->
+    <div class="accordion-section" id="sec-tds">
+        <div class="accordion-header">
+            <div class="accordion-header-left"><h3>TDS, Advance Tax &amp; Bank Details</h3></div>
+            <span class="accordion-arrow">▶</span>
+        </div>
+        <div class="accordion-content"><div class="accordion-body">
+
+            <div class="section-title">Schedule TDS1 — TDS on Salary</div>
+            <button class="btn btn-add" id="btn-add-tds1">+ Add TDS (Salary)</button>
+            <div class="table-wrap"><table>
+                <thead><tr><th>TAN of Deductor</th><th>Name of Employer</th><th>Gross Amt Credited (₹)</th><th>TDS Deducted (₹)</th><th style="width:50px"></th></tr></thead>
+                <tbody id="tds1Body"></tbody>
+                <tfoot><tr class="total-row"><td colspan="3">Total TDS on Salary</td><td id="totTDS1" class="computed-cell">₹0</td><td></td></tr></tfoot>
+            </table></div>
+
+            <div class="section-title">Schedule TDS2 — TDS on Non-Salary (Business / Profession / Other)</div>
+            <div class="info-note">TDS deducted by clients on professional fees, contract payments, etc. (Form 16A / 26AS)</div>
+            <button class="btn btn-add" id="btn-add-tds2">+ Add TDS (Non-Salary)</button>
+            <div class="table-wrap"><table>
+                <thead><tr><th>TAN of Deductor</th><th>Name of Deductor</th><th>Nature of Payment</th><th>Gross Amt (₹)</th><th>TDS (₹)</th><th style="width:50px"></th></tr></thead>
+                <tbody id="tds2Body"></tbody>
+                <tfoot><tr class="total-row"><td colspan="4">Total TDS (Non-Salary)</td><td id="totTDS2" class="computed-cell">₹0</td><td></td></tr></tfoot>
+            </table></div>
+
+            <div class="section-title">Schedule IT — Advance Tax &amp; Self-Assessment Tax</div>
+            <button class="btn btn-add" id="btn-add-advtax">+ Add Payment</button>
+            <div class="table-wrap"><table>
+                <thead><tr><th>BSR Code</th><th>Date of Deposit</th><th>Challan Serial No.</th><th>Amount (₹)</th><th style="width:50px"></th></tr></thead>
+                <tbody id="advTaxBody"></tbody>
+                <tfoot><tr class="total-row"><td colspan="3">Total Advance Tax / SAT</td><td id="totAdvTax" class="computed-cell">₹0</td><td></td></tr></tfoot>
+            </table></div>
+
+            <div class="section-title">Bank Account for Refund Credit</div>
+            <div class="form-grid">
+                <div class="form-field"><label>Bank IFSC Code <span class="req">*</span></label><input type="text" id="bankIFSC" data-key="bankIFSC" placeholder="SBIN0001234" maxlength="11" style="text-transform:uppercase"><span class="error-msg" id="err-bankIFSC">⚠ Invalid IFSC</span></div>
+                <div class="form-field"><label>Account Number <span class="req">*</span></label><input type="text" id="bankAccNo" data-key="bankAccNo" placeholder="00000011223344"></div>
+                <div class="form-field"><label>Account Type</label><select id="bankAccType" data-key="bankAccType"><option value="SB">Savings</option><option value="CA">Current</option><option value="CC">Cash Credit</option><option value="OD">OD</option></select></div>
+                <div class="form-field"><label>Bank Name</label><input type="text" id="bankName" data-key="bankName" placeholder="State Bank of India"></div>
+            </div>
+        </div></div>
+    </div>
+
+    <!-- TAX SUMMARY -->
+    <div class="accordion-section" id="sec-summary">
+        <div class="accordion-header">
+            <div class="accordion-header-left"><h3>Tax Summary &amp; Computation</h3></div>
+            <span class="accordion-arrow">▶</span>
+        </div>
+        <div class="accordion-content"><div class="accordion-body">
+            <div class="summary-box">
+                <div class="summary-row"><span>Income from Salary</span><span id="sumSalary">₹0</span></div>
+                <div class="summary-row"><span>Income from Business / Profession (BP)</span><span id="sumBP">₹0</span></div>
+                <div class="summary-row indent"><span>  Presumptive / Regular Net Profit</span><span id="sumBPBase">₹0</span></div>
+                <div class="summary-row indent"><span>  u/s 50 STCG (Depreciable Assets)</span><span id="sumSec50">₹0</span></div>
+                <div class="summary-row"><span>Income from House Property</span><span id="sumHP">₹0</span></div>
+                <div class="summary-row indent"><span>  STCG 111A (gross)</span><span id="sumSTCG111A">₹0</span></div>
+                <div class="summary-row indent"><span>  STCG Other</span><span id="sumSTCGOther">₹0</span></div>
+                <div class="summary-row indent"><span>  LTCG 112A (gross)</span><span id="sumLTCG112A">₹0</span></div>
+                <div class="summary-row indent"><span>  LTCG Other</span><span id="sumLTCGOther">₹0</span></div>
+                <div class="summary-row"><span>Income from Other Sources</span><span id="sumOS">₹0</span></div>
+                <div class="summary-row"><span>Gross Total Income (GTI)</span><span id="sumGTI">₹0</span></div>
+                <div class="summary-row"><span>Loss Set-Off (CYLA + BFLA)</span><span id="sumLossSetoff">₹0</span></div>
+                <div class="summary-row"><span>Chapter VI-A Deductions</span><span id="sumDed">₹0</span></div>
+                <div class="summary-row"><span>Total Income (rounded to nearest ₹10)</span><span id="sumTI">₹0</span></div>
+                <div class="summary-row tax-row"><span>Gross Tax Liability</span><span id="sumTax">₹0</span></div>
+                <div class="summary-row"><span>Total Tax Paid (TDS + Advance)</span><span id="sumPaid">₹0</span></div>
+                <div class="summary-row" id="sumRow"><span id="sumLabel">REFUND / PAYABLE</span><span id="sumRef">₹0</span></div>
+            </div>
+
+            <div class="tax-breakdown">
+                <h4>Detailed Tax Computation (CA-Grade)</h4>
+                <div class="tax-line"><span>Normal Income (excl. special-rate CG)</span><span id="bdNormalInc">₹0</span></div>
+                <div class="tax-line"><span>Tax at Normal Slab Rates</span><span id="bdNormalTax">₹0</span></div>
+                <div class="tax-line"><span>Tax on STCG 111A (@ 20%)</span><span id="bdSTCG111ATax">₹0</span></div>
+                <div class="tax-line"><span>Tax on LTCG 112A (@ 12.5%, after ₹1.25L exemption)</span><span id="bdLTCG112ATax">₹0</span></div>
+                <div class="tax-line"><span>Tax on LTCG Other (@ 20%)</span><span id="bdLTCGOtherTax">₹0</span></div>
+                <div class="tax-line highlight"><span>Total Tax before Rebate 87A</span><span id="bdTotalBeforeRebate">₹0</span></div>
+                <div class="tax-line deduct"><span>Less: Rebate u/s 87A</span><span id="bdRebate">₹0</span></div>
+                <div class="tax-line"><span>Tax after Rebate</span><span id="bdAfterRebate">₹0</span></div>
+                <div class="tax-line"><span id="bdSurchargeLabel">Surcharge</span><span id="bdSurcharge">₹0</span></div>
+                <div class="tax-line indent" id="bdMarginalReliefLine"><span>Less: Marginal Relief</span><span id="bdMarginalRelief">₹0</span></div>
+                <div class="tax-line"><span>Health &amp; Education Cess @ 4%</span><span id="bdCess">₹0</span></div>
+                <div class="tax-line"><span>Net Tax Liability</span><span id="bdNetTax">₹0</span></div>
+                <div class="tax-line deduct"><span>Less: TDS (Salary)</span><span id="bdTDS1">₹0</span></div>
+                <div class="tax-line deduct"><span>Less: TDS (Non-Salary)</span><span id="bdTDS2">₹0</span></div>
+                <div class="tax-line deduct"><span>Less: Advance Tax / SAT</span><span id="bdAdvTax">₹0</span></div>
+                <div class="tax-line highlight"><span id="bdFinalLabel">Net Tax Payable / (Refund)</span><span id="bdFinalAmt">₹0</span></div>
+            </div>
+        </div></div>
+    </div>
+
+    <!-- VERIFICATION -->
+    <div class="accordion-section" id="sec-verification">
+        <div class="accordion-header">
+            <div class="accordion-header-left"><h3>Verification</h3></div>
+            <span class="accordion-arrow">▶</span>
+        </div>
+        <div class="accordion-content"><div class="accordion-body">
+            <div class="form-grid-3">
+                <div class="form-field"><label>Place of Filing</label><input type="text" id="verPlace" data-key="verPlace" placeholder="Kolhapur"></div>
+                <div class="form-field"><label>Date of Filing</label><input type="date" id="verDate" data-key="verDate"></div>
+                <div class="form-field"><label>Capacity (Signatory)</label>
+                    <select id="verCapacity" data-key="verCapacity">
+                        <option value="S">Self (Individual)</option>
+                        <option value="K">Karta (HUF)</option>
+                        <option value="A">Authorized Signatory</option>
+                    </select>
+                </div>
+            </div>
+            <div class="info-note">I solemnly declare that the information given in this Return is correct, complete and truly stated and that the amount of total income and other particulars shown therein are truly stated to the best of my knowledge and belief.</div>
+        </div></div>
+    </div>
+
+    <div class="spacer"></div>
+</div>
+
+
+<!-- AI ASSISTANT PANEL -->
+<div id="aiPanel" class="ai-panel">
+    <div class="ai-header">
+        <div>
+            <div class="ai-title" id="aiTitle">AI Assistant</div>
+            <div class="ai-sub">Field Guidance</div>
+        </div>
+        <button class="ai-close" onclick="closeAIPanel()">×</button>
+    </div>
+    <div id="aiChat" class="ai-chat"></div>
+    <div class="ai-input-area">
+        <textarea id="aiInput" placeholder="Ask anything about this field..."></textarea>
+        <button onclick="sendAIMessage()">Send</button>
+    </div>
+</div>
+
+<!-- REDACTION MODAL -->
+<div id="redactModal" style="position:fixed;inset:0;background:#000000cc;display:none;z-index:99999;">
+  <div style="width:90%;height:90%;margin:2% auto;background:#111;position:relative;border-radius:10px;">
+    <div id="pdfScrollArea" style="height:90%;overflow-y:auto;padding:20px;background:#111;"></div>
+    <div style="position:absolute;top:10px;right:10px;">
+      <button onclick="applyRedaction()" class="btn btn-success">Apply Redaction & Continue</button>
+    </div>
+  </div>
+</div>
+
+<!-- ACTION BAR -->
+<div class="action-bar">
+    <button class="btn btn-primary" id="btn-load">Validate</button>
+    <button class="btn btn-success" id="btn-download">📄 Download JSON (ITR-3)</button>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+/* ================================================================
+   ITR-3 AY 2025-26 — CA-Grade Engine
+   ================================================================
+   Section 1:  State Management
+   Section 2:  Validation Layer
+   Section 3:  UI Utilities
+   Section 4:  Dynamic Row Management
+   Section 5:  Tax Engine (same as ITR-2 + Business income)
+   Section 6:  CYLA / BFLA / CFL Loss Engine (ITR-3 extended)
+   Section 7:  Recalculation Engine
+   Section 8:  Balance Sheet Computation
+   Section 9:  Save / Load
+   Section 10: JSON Builder — ITR-3 Schema
+   Section 11: Event Listeners & Init
+   ================================================================ */
+
+// ============================================================
+// SECTION 1 — STATE MANAGEMENT
+// ============================================================
+const state = {
+    regime: 'new',
+    hp:        [],
+    stcg111a:  [],
+    stcgOther: [],
+    ltcg112a:  [],
+    ltcgOther: [],
+    tds1:      [],
+    tds2:      [],
+    advTax:    [],
+    dep:       [],
+    computed:  {}
+};
+
+function uuid() {
+    return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+}
+
+function num(id) {
+    const el = document.getElementById(id);
+    if (!el) return 0;
+    const v = parseFloat(el.value);
+    return isNaN(v) ? 0 : v;
+}
+
+function numKey(key) {
+    const el = document.querySelector(`[data-key="${key}"]`);
+    if (!el) return 0;
+    const v = parseFloat(el.value);
+    return isNaN(v) ? 0 : v;
+}
+
+// ============================================================
+// SECTION 2 — VALIDATION LAYER
+// ============================================================
+const VALIDATORS = {
+    pan:       v => /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(v.toUpperCase()),
+    aadhaar:   v => /^\d{12}$/.test(v.replace(/\s/g, '')),
+    mobile:    v => /^\d{10}$/.test(v),
+    email:     v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v),
+    pincode:   v => /^\d{6}$/.test(v),
+    tan:       v => v === '' || /^[A-Z]{4}[0-9]{5}[A-Z]{1}$/.test(v.toUpperCase()),
+    bankIFSC:  v => v === '' || /^[A-Z]{4}0[A-Z0-9]{6}$/.test(v.toUpperCase()),
+    firstName: v => v.trim().length > 0,
+    lastName:  v => v.trim().length > 0,
+    dob:       v => v !== '',
+    city:      v => v.trim().length > 0
+};
+
+function validateField(id) {
+    const el = document.getElementById(id);
+    if (!el) return true;
+    const errEl = document.getElementById('err-' + id);
+    const val = el.value.trim();
+    const validator = VALIDATORS[id];
+    if (!validator) return true;
+    const valid = validator(val);
+    el.classList.toggle('error', !valid);
+    el.classList.toggle('valid', valid);
+    if (errEl) errEl.classList.toggle('show', !valid);
+    return valid;
+}
+
+function validateAll() {
+    const required = ['firstName', 'lastName', 'pan', 'aadhaar', 'dob', 'mobile', 'email', 'city', 'pincode'];
+    const errors = [];
+    required.forEach(id => { if (!validateField(id)) errors.push(id); });
+    const ifsc = document.getElementById('bankIFSC')?.value || '';
+    if (ifsc && !VALIDATORS.bankIFSC(ifsc)) errors.push('bankIFSC');
+    state.tds1.forEach(r => { if (r.tan && !VALIDATORS.tan(r.tan)) errors.push(`TAN:${r.tan}`); });
+    state.tds2.forEach(r => { if (r.tan && !VALIDATORS.tan(r.tan)) errors.push(`TAN:${r.tan}`); });
+    return errors;
+}
+
+// ============================================================
+// SECTION 3 — UI UTILITIES
+// ============================================================
+function toast(msg, type = 'info') {
+    const c = document.getElementById('toastContainer');
+    const el = document.createElement('div');
+    el.className = `toast ${type}`;
+    el.innerHTML = `<span>${{success:'✅',error:'❌',info:'ℹ️'}[type]||'ℹ️'}</span><span>${msg}</span>`;
+    c.appendChild(el);
+    setTimeout(() => { el.style.opacity='0'; el.style.transition='opacity 0.4s'; setTimeout(()=>el.remove(),400); }, 3500);
+}
+
+function fmt(n) {
+    if (n === undefined || n === null || isNaN(n)) return '₹0';
+    const abs = Math.abs(Math.round(n));
+    return (n < 0 ? '-' : '') + '₹' + abs.toLocaleString('en-IN');
+}
+
+function setEl(id, text) { const el = document.getElementById(id); if (el) el.textContent = text; }
+const R10 = n => Math.round(n / 10) * 10;
+
+function setupAccordions() {
+    document.querySelectorAll('.accordion-header').forEach(h => {
+        h.addEventListener('click', () => h.closest('.accordion-section').classList.toggle('active'));
+    });
+}
+
+// ============================================================
+// SECTION 4 — DYNAMIC ROW MANAGEMENT
+// ============================================================
+function addHPRow(data = null) {
+    const id = (data && data.id) ? data.id : uuid();
+    const row = { id, type:'S', rent:0, tax:0, interest:0, ...(data||{}) };
+    if (!data) state.hp.push(row);
+    const tbody = document.getElementById('hpBody');
+    const tr = document.createElement('tr');
+    tr.dataset.rowId = id;
+    tr.innerHTML = `
+        <td><select data-field="type"><option value="S">Self-Occupied</option><option value="L">Let Out</option></select></td>
+        <td><input type="number" data-field="rent" value="${row.rent}" min="0"></td>
+        <td><input type="number" data-field="tax" value="${row.tax}" min="0"></td>
+        <td><input type="number" data-field="interest" value="${row.interest}" min="0"></td>
+        <td class="computed-cell" data-computed="hpInc">₹0</td>
+        <td><button class="btn btn-remove" data-row-id="${id}" data-section="hp">×</button></td>`;
+    tr.querySelector('[data-field="type"]').value = row.type;
+    tbody.appendChild(tr);
+    bindRowEvents(tr, 'hp', id);
+    recalc();
+}
+
+function addCGRow(section, data = null) {
+    const bodyId = {stcg111a:'stcg111aBody',stcgOther:'stcgOtherBody',ltcg112a:'ltcg112aBody',ltcgOther:'ltcgOtherBody'}[section];
+    const id = (data && data.id) ? data.id : uuid();
+    const row = { id, asset:'', salePrice:0, cost:0, ...(data||{}) };
+    if (!data) state[section].push(row);
+    const tbody = document.getElementById(bodyId);
+    const tr = document.createElement('tr');
+    tr.dataset.rowId = id;
+    tr.innerHTML = `
+        <td><input type="text" data-field="asset" value="${row.asset}" placeholder="Asset description"></td>
+        <td><input type="number" data-field="salePrice" value="${row.salePrice}" min="0"></td>
+        <td><input type="number" data-field="cost" value="${row.cost}" min="0"></td>
+        <td class="computed-cell" data-computed="gain">₹0</td>
+        <td><button class="btn btn-remove" data-row-id="${id}" data-section="${section}">×</button></td>`;
+    tbody.appendChild(tr);
+    bindRowEvents(tr, section, id);
+    recalc();
+}
+
+function addTDS1Row(data = null) {
+    const id = (data && data.id) ? data.id : uuid();
+    const row = { id, tan:'', employer:'', grossSalary:0, amount:0, ...(data||{}) };
+    if (!data) state.tds1.push(row);
+    const tbody = document.getElementById('tds1Body');
+    const tr = document.createElement('tr');
+    tr.dataset.rowId = id;
+    tr.innerHTML = `
+        <td><input type="text" data-field="tan" value="${row.tan}" maxlength="10" placeholder="MUMX00000A" style="text-transform:uppercase"></td>
+        <td><input type="text" data-field="employer" value="${row.employer}" placeholder="Employer Name"></td>
+        <td><input type="number" data-field="grossSalary" value="${row.grossSalary}" min="0"></td>
+        <td><input type="number" data-field="amount" value="${row.amount}" min="0"></td>
+        <td><button class="btn btn-remove" data-row-id="${id}" data-section="tds1">×</button></td>`;
+    tbody.appendChild(tr);
+    bindRowEvents(tr, 'tds1', id);
+    recalc();
+}
+
+function addTDS2Row(data = null) {
+    const id = (data && data.id) ? data.id : uuid();
+    const row = { id, tan:'', deductor:'', nature:'Professional Fees', grossAmt:0, amount:0, ...(data||{}) };
+    if (!data) state.tds2.push(row);
+    const tbody = document.getElementById('tds2Body');
+    const tr = document.createElement('tr');
+    tr.dataset.rowId = id;
+    tr.innerHTML = `
+        <td><input type="text" data-field="tan" value="${row.tan}" maxlength="10" placeholder="BLRX00000A" style="text-transform:uppercase"></td>
+        <td><input type="text" data-field="deductor" value="${row.deductor}" placeholder="Client Name"></td>
+        <td><input type="text" data-field="nature" value="${row.nature}" placeholder="Professional Fees"></td>
+        <td><input type="number" data-field="grossAmt" value="${row.grossAmt}" min="0"></td>
+        <td><input type="number" data-field="amount" value="${row.amount}" min="0"></td>
+        <td><button class="btn btn-remove" data-row-id="${id}" data-section="tds2">×</button></td>`;
+    tbody.appendChild(tr);
+    bindRowEvents(tr, 'tds2', id);
+    recalc();
+}
+
+function addAdvTaxRow(data = null) {
+    const id = (data && data.id) ? data.id : uuid();
+    const row = { id, bsr:'', date:'', serial:'', amount:0, ...(data||{}) };
+    if (!data) state.advTax.push(row);
+    const tbody = document.getElementById('advTaxBody');
+    const tr = document.createElement('tr');
+    tr.dataset.rowId = id;
+    tr.innerHTML = `
+        <td><input type="text" data-field="bsr" value="${row.bsr}" maxlength="7" placeholder="0001234"></td>
+        <td><input type="date" data-field="date" value="${row.date}"></td>
+        <td><input type="text" data-field="serial" value="${row.serial}" maxlength="5" placeholder="00001"></td>
+        <td><input type="number" data-field="amount" value="${row.amount}" min="0"></td>
+        <td><button class="btn btn-remove" data-row-id="${id}" data-section="advTax">×</button></td>`;
+    tbody.appendChild(tr);
+    bindRowEvents(tr, 'advTax', id);
+    recalc();
+}
+
+function addDepRow(data = null) {
+    const id = (data && data.id) ? data.id : uuid();
+    const row = { id, block:'Plant & Machinery', rate:15, wdvOpen:0, additions:0, deletions:0, ...(data||{}) };
+    if (!data) state.dep.push(row);
+    const tbody = document.getElementById('depBody');
+    const tr = document.createElement('tr');
+    tr.dataset.rowId = id;
+    tr.innerHTML = `
+        <td><input type="text" data-field="block" value="${row.block}" placeholder="Plant & Machinery"></td>
+        <td><input type="number" data-field="rate" value="${row.rate}" min="0" max="100" style="width:60px"></td>
+        <td><input type="number" data-field="wdvOpen" value="${row.wdvOpen}" min="0"></td>
+        <td><input type="number" data-field="additions" value="${row.additions}" min="0"></td>
+        <td><input type="number" data-field="deletions" value="${row.deletions}" min="0"></td>
+        <td class="computed-cell" data-computed="wdvClose">₹0</td>
+        <td class="computed-cell" data-computed="depAmt">₹0</td>
+        <td><button class="btn btn-remove" data-row-id="${id}" data-section="dep">×</button></td>`;
+    tbody.appendChild(tr);
+    bindRowEvents(tr, 'dep', id);
+    recalc();
+}
+
+function bindRowEvents(tr, section, id) {
+    tr.querySelectorAll('[data-field]').forEach(input => {
+        input.addEventListener('input', () => {
+            const field = input.dataset.field;
+            const item = state[section].find(r => r.id === id);
+            if (!item) return;
+            item[field] = (input.type === 'number') ? (parseFloat(input.value)||0) : input.value;
+            recalc();
+        });
+    });
+    const removeBtn = tr.querySelector('[data-row-id]');
+    if (removeBtn) {
+        removeBtn.addEventListener('click', () => {
+            state[removeBtn.dataset.section] = state[removeBtn.dataset.section].filter(r => r.id !== id);
+            tr.remove();
+            recalc();
+        });
+    }
+}
+
+// ============================================================
+// SECTION 5 — TAX ENGINE
+// ============================================================
+
+function calcHPIncome(prop) {
+    if (prop.type === 'S') {
+        return -Math.min(Math.max(0, prop.interest), 200000);
+    } else {
+        const gav = Math.max(0, prop.rent);
+        const nav = Math.max(0, gav - prop.tax);
+        return (nav * 0.7) - prop.interest;
+    }
+}
+
+function _slabTax(income, regime) {
+    income = Math.max(0, income);
+    if (regime === 'new') {
+        if (income <= 300000)  return 0;
+        if (income <= 700000)  return (income - 300000) * 0.05;
+        if (income <= 1000000) return 20000  + (income - 700000)  * 0.10;
+        if (income <= 1200000) return 50000  + (income - 1000000) * 0.15;
+        if (income <= 1500000) return 80000  + (income - 1200000) * 0.20;
+        return                        140000 + (income - 1500000) * 0.30;
+    } else {
+        if (income <= 250000)  return 0;
+        if (income <= 500000)  return (income - 250000)  * 0.05;
+        if (income <= 1000000) return 12500  + (income - 500000)  * 0.20;
+        return                        112500 + (income - 1000000) * 0.30;
+    }
+}
+
+function calcNormalSlabTax(normalIncome, regime) {
+    const tax = R10(_slabTax(Math.max(0, normalIncome), regime));
+    return tax;
+}
+
+function calcSurcharge(taxGross, totalIncome, residentialStatus) {
+    const isNRI = residentialStatus === 'NRI';
+    const slabs = isNRI
+        ? [
+            { threshold: 10000000, rate: 0.15 },
+            { threshold:  5000000, rate: 0.10 },
+            { threshold:        0, rate: 0.00 }
+          ]
+        : [
+            { threshold: 50000000, rate: 0.37 },
+            { threshold: 20000000, rate: 0.25 },
+            { threshold: 10000000, rate: 0.15 },
+            { threshold:  5000000, rate: 0.10 },
+            { threshold:        0, rate: 0.00 }
+          ];
+
+    const slabIdx = slabs.findIndex(s => totalIncome > s.threshold);
+    if (slabIdx < 0 || slabs[slabIdx].rate === 0) {
+        return { surcharge: 0, marginalRelief: 0, surchargeRate: 0, rawSurcharge: 0 };
+    }
+
+    const surchargeRate = slabs[slabIdx].rate;
+    const T_crossed = slabs[slabIdx].threshold;
+    const rawSurcharge = taxGross * surchargeRate;
+    const rawCess = (taxGross + rawSurcharge) * 0.04;
+    const actualNet = taxGross + rawSurcharge + rawCess;
+    const effectiveRate = totalIncome > 0 ? taxGross / totalIncome : 0;
+
+    let bestRelief = 0;
+    const lowerThresholds = slabs.filter(s => s.threshold < T_crossed && s.threshold > 0);
+    const checkPoints = [{ threshold: T_crossed, rate: (slabs[slabIdx + 1] ?? {rate:0}).rate },
+                          ...lowerThresholds.map((s) => ({
+                              threshold: s.threshold,
+                              rate: (slabs[slabs.indexOf(s) + 1] ?? {rate:0}).rate
+                          }))];
+
+    for (const cp of checkPoints) {
+        const T = cp.threshold;
+        const rPrev = cp.rate;
+        const taxAtT = effectiveRate * T;
+        const surAtT = taxAtT * rPrev;
+        const cessAtT = (taxAtT + surAtT) * 0.04;
+        const netAtT = taxAtT + surAtT + cessAtT;
+        const maxPermissible = netAtT + (totalIncome - T);
+        if (actualNet > maxPermissible) {
+            const reliefRaw = (actualNet - maxPermissible) / 1.04;
+            const relief = Math.min(reliefRaw, rawSurcharge);
+            bestRelief = Math.max(bestRelief, relief);
+        }
+    }
+
+    const marginalRelief = R10(bestRelief);
+    const finalSurcharge = R10(Math.max(0, rawSurcharge - marginalRelief));
+    return { surcharge: finalSurcharge, marginalRelief, surchargeRate, rawSurcharge: R10(rawSurcharge) };
+}
+
+function calcRebate87A(totalIncome, normalTax, regime) {
+    if (regime === 'new') {
+        if (totalIncome > 700000) return 0;
+        return Math.min(normalTax, 25000);
+    } else {
+        if (totalIncome > 500000) return 0;
+        return Math.min(normalTax, 12500);
+    }
+}
+
+// ============================================================
+// SECTION 6 — CYLA / BFLA / CFL LOSS ENGINE (ITR-3 Extended)
+// ============================================================
+function runLossSetoff(incomes) {
+    let sal   = incomes.salary;
+    let bp    = incomes.bp;       // business/profession (non-speculative)
+    let spec  = incomes.speculative;
+    let hp    = incomes.hp;
+    let s111a = incomes.stcg111a;
+    let sOth  = incomes.stcgOther;
+    let l112a = incomes.ltcg112a;
+    let lOth  = incomes.ltcgOther;
+    let os    = incomes.os;
+
+    const setoff = {
+        cySTCGIntra: 0, cyLTCGIntra: 0, hpInterHead: 0,
+        bfBusApplied: 0, bfHPApplied: 0, bfSTCGApplied: 0, bfLTCGApplied: 0,
+        bfUnabsDeprApplied: 0
+    };
+
+    // ── Intra-head CG setoff (current year) ──────────────────────────────────
+    let cySTCGLoss = 0;
+    if (s111a < 0) { cySTCGLoss += -s111a; s111a = 0; }
+    if (sOth  < 0) { cySTCGLoss += -sOth;  sOth  = 0; }
+    let cyLTCGLoss = 0;
+    if (l112a < 0) { cyLTCGLoss += -l112a; l112a = 0; }
+    if (lOth  < 0) { cyLTCGLoss += -lOth;  lOth  = 0; }
+
+    // Apply CY STCG loss → STCG then LTCG
+    if (cySTCGLoss > 0 && s111a > 0) { const x = Math.min(cySTCGLoss, s111a); s111a -= x; cySTCGLoss -= x; setoff.cySTCGIntra += x; }
+    if (cySTCGLoss > 0 && sOth  > 0) { const x = Math.min(cySTCGLoss, sOth);  sOth  -= x; cySTCGLoss -= x; setoff.cySTCGIntra += x; }
+    if (cySTCGLoss > 0 && l112a > 0) { const x = Math.min(cySTCGLoss, l112a); l112a -= x; cySTCGLoss -= x; setoff.cySTCGIntra += x; }
+    if (cySTCGLoss > 0 && lOth  > 0) { const x = Math.min(cySTCGLoss, lOth);  lOth  -= x; cySTCGLoss -= x; setoff.cySTCGIntra += x; }
+
+    // Apply CY LTCG loss → LTCG only
+    if (cyLTCGLoss > 0 && l112a > 0) { const x = Math.min(cyLTCGLoss, l112a); l112a -= x; cyLTCGLoss -= x; setoff.cyLTCGIntra += x; }
+    if (cyLTCGLoss > 0 && lOth  > 0) { const x = Math.min(cyLTCGLoss, lOth);  lOth  -= x; cyLTCGLoss -= x; setoff.cyLTCGIntra += x; }
+
+    // ── CY HP inter-head setoff ───────────────────────────────────────────────
+    let hpLoss = hp < 0 ? -hp : 0;
+    if (hp < 0) hp = 0;
+
+    if (hpLoss > 0 && sal   > 0) { const x = Math.min(hpLoss, sal);   sal   -= x; hpLoss -= x; setoff.hpInterHead += x; }
+    if (hpLoss > 0 && bp    > 0) { const x = Math.min(hpLoss, bp);    bp    -= x; hpLoss -= x; setoff.hpInterHead += x; }
+    if (hpLoss > 0 && s111a > 0) { const x = Math.min(hpLoss, s111a); s111a -= x; hpLoss -= x; setoff.hpInterHead += x; }
+    if (hpLoss > 0 && sOth  > 0) { const x = Math.min(hpLoss, sOth);  sOth  -= x; hpLoss -= x; setoff.hpInterHead += x; }
+    if (hpLoss > 0 && l112a > 0) { const x = Math.min(hpLoss, l112a); l112a -= x; hpLoss -= x; setoff.hpInterHead += x; }
+    if (hpLoss > 0 && lOth  > 0) { const x = Math.min(hpLoss, lOth);  lOth  -= x; hpLoss -= x; setoff.hpInterHead += x; }
+    if (hpLoss > 0 && os    > 0) { const x = Math.min(hpLoss, os);    os    -= x; hpLoss -= x; setoff.hpInterHead += x; }
+    const cyHPUnabsorbed = hpLoss;
+
+    // ── Current year business loss (non-speculative) inter-head ──────────────
+    let cyBusLoss = bp < 0 ? -bp : 0;
+    if (bp < 0) bp = 0;
+    // Business loss (non-speculative) can set off against any income except salary
+    if (cyBusLoss > 0 && s111a > 0) { const x = Math.min(cyBusLoss, s111a); s111a -= x; cyBusLoss -= x; }
+    if (cyBusLoss > 0 && sOth  > 0) { const x = Math.min(cyBusLoss, sOth);  sOth  -= x; cyBusLoss -= x; }
+    if (cyBusLoss > 0 && l112a > 0) { const x = Math.min(cyBusLoss, l112a); l112a -= x; cyBusLoss -= x; }
+    if (cyBusLoss > 0 && lOth  > 0) { const x = Math.min(cyBusLoss, lOth);  lOth  -= x; cyBusLoss -= x; }
+    if (cyBusLoss > 0 && os    > 0) { const x = Math.min(cyBusLoss, os);    os    -= x; cyBusLoss -= x; }
+
+    // ── BF Business Loss (non-speculative) → business income first ───────────
+    let bfBus = Math.max(0, num('bfBusLoss'));
+    if (bfBus > 0 && bp    > 0) { const x = Math.min(bfBus, bp);    bp    -= x; bfBus -= x; setoff.bfBusApplied += x; }
+    if (bfBus > 0 && s111a > 0) { const x = Math.min(bfBus, s111a); s111a -= x; bfBus -= x; setoff.bfBusApplied += x; }
+    if (bfBus > 0 && sOth  > 0) { const x = Math.min(bfBus, sOth);  sOth  -= x; bfBus -= x; setoff.bfBusApplied += x; }
+    if (bfBus > 0 && l112a > 0) { const x = Math.min(bfBus, l112a); l112a -= x; bfBus -= x; setoff.bfBusApplied += x; }
+    if (bfBus > 0 && lOth  > 0) { const x = Math.min(bfBus, lOth);  lOth  -= x; bfBus -= x; setoff.bfBusApplied += x; }
+    const bfBusRemaining = bfBus;
+
+    // ── BF STCG loss ─────────────────────────────────────────────────────────
+    let bfSTCG = Math.max(0, num('bfSTCGLoss'));
+    if (bfSTCG > 0 && s111a > 0) { const x = Math.min(bfSTCG, s111a); s111a -= x; bfSTCG -= x; setoff.bfSTCGApplied += x; }
+    if (bfSTCG > 0 && sOth  > 0) { const x = Math.min(bfSTCG, sOth);  sOth  -= x; bfSTCG -= x; setoff.bfSTCGApplied += x; }
+    if (bfSTCG > 0 && l112a > 0) { const x = Math.min(bfSTCG, l112a); l112a -= x; bfSTCG -= x; setoff.bfSTCGApplied += x; }
+    if (bfSTCG > 0 && lOth  > 0) { const x = Math.min(bfSTCG, lOth);  lOth  -= x; bfSTCG -= x; setoff.bfSTCGApplied += x; }
+    const bfSTCGRemaining = bfSTCG;
+
+    // ── BF LTCG loss ─────────────────────────────────────────────────────────
+    let bfLTCG = Math.max(0, num('bfLTCGLoss'));
+    if (bfLTCG > 0 && l112a > 0) { const x = Math.min(bfLTCG, l112a); l112a -= x; bfLTCG -= x; setoff.bfLTCGApplied += x; }
+    if (bfLTCG > 0 && lOth  > 0) { const x = Math.min(bfLTCG, lOth);  lOth  -= x; bfLTCG -= x; setoff.bfLTCGApplied += x; }
+    const bfLTCGRemaining = bfLTCG;
+
+    // ── BF HP loss → all heads ────────────────────────────────────────────────
+    let bfHP = Math.max(0, num('bfHPLoss'));
+    if (bfHP > 0 && sal   > 0) { const x = Math.min(bfHP, sal);   sal   -= x; bfHP -= x; setoff.bfHPApplied += x; }
+    if (bfHP > 0 && bp    > 0) { const x = Math.min(bfHP, bp);    bp    -= x; bfHP -= x; setoff.bfHPApplied += x; }
+    if (bfHP > 0 && s111a > 0) { const x = Math.min(bfHP, s111a); s111a -= x; bfHP -= x; setoff.bfHPApplied += x; }
+    if (bfHP > 0 && sOth  > 0) { const x = Math.min(bfHP, sOth);  sOth  -= x; bfHP -= x; setoff.bfHPApplied += x; }
+    if (bfHP > 0 && l112a > 0) { const x = Math.min(bfHP, l112a); l112a -= x; bfHP -= x; setoff.bfHPApplied += x; }
+    if (bfHP > 0 && lOth  > 0) { const x = Math.min(bfHP, lOth);  lOth  -= x; bfHP -= x; setoff.bfHPApplied += x; }
+    if (bfHP > 0 && os    > 0) { const x = Math.min(bfHP, os);    os    -= x; bfHP -= x; setoff.bfHPApplied += x; }
+    const bfHPRemaining = bfHP;
+
+    // ── BF Unabsorbed Depreciation → any income ───────────────────────────────
+    let bfUD = Math.max(0, num('bfUnabsDepr'));
+    if (bfUD > 0 && sal   > 0) { const x = Math.min(bfUD, sal);   sal   -= x; bfUD -= x; setoff.bfUnabsDeprApplied += x; }
+    if (bfUD > 0 && bp    > 0) { const x = Math.min(bfUD, bp);    bp    -= x; bfUD -= x; setoff.bfUnabsDeprApplied += x; }
+    if (bfUD > 0 && s111a > 0) { const x = Math.min(bfUD, s111a); s111a -= x; bfUD -= x; setoff.bfUnabsDeprApplied += x; }
+    if (bfUD > 0 && l112a > 0) { const x = Math.min(bfUD, l112a); l112a -= x; bfUD -= x; setoff.bfUnabsDeprApplied += x; }
+    if (bfUD > 0 && os    > 0) { const x = Math.min(bfUD, os);    os    -= x; bfUD -= x; setoff.bfUnabsDeprApplied += x; }
+
+    const totalSetoff = setoff.cySTCGIntra + setoff.cyLTCGIntra + setoff.hpInterHead +
+                        setoff.bfBusApplied + setoff.bfHPApplied + setoff.bfSTCGApplied + setoff.bfLTCGApplied +
+                        setoff.bfUnabsDeprApplied;
+
+    return {
+        adjusted: { salary: sal, bp, speculative: spec, hp: 0, stcg111a: s111a, stcgOther: sOth, ltcg112a: l112a, ltcgOther: lOth, os },
+        carryForward: {
+            bus: cyBusLoss + bfBusRemaining,
+            hp:  cyHPUnabsorbed + bfHPRemaining,
+            stcg: cySTCGLoss + bfSTCGRemaining,
+            ltcg: cyLTCGLoss + bfLTCGRemaining
+        },
+        cyHPUnabsorbed, cyBusLoss, cySTCGLoss, cyLTCGLoss,
+        bfBusRemaining, bfHPRemaining, bfSTCGRemaining, bfLTCGRemaining,
+        setoff, totalSetoff
+    };
+}
+
+// ============================================================
+// SECTION 7 — RECALCULATION ENGINE
+// ============================================================
+function recalc() {
+    // ── BUSINESS INCOME ───────────────────────────────────────────────────────
+    const presumptiveSection = document.getElementById('presumptiveSection')?.value || '';
+    const presumptiveProfit  = Math.max(0, num('presumptiveProfit'));
+    const grossReceipts = Math.max(0, num('grossReceipts'));
+    const cogs          = Math.max(0, num('cogs'));
+    const grossProfit   = Math.max(0, grossReceipts - cogs);
+    setEl('grossProfitCell', fmt(grossProfit));
+
+    const allExpenses = num('expSalary') + num('expRent') + num('expRepairs') + num('expPowerFuel') +
+        num('expDepreciation') + num('expProfFees') + num('expAdvertisement') + num('expTravel') +
+        num('expInterestBusiness') + num('expBadDebts') + num('expOther');
+    const disallowedExp = Math.max(0, num('disallowedExp'));
+    const regularNetProfit = grossProfit - allExpenses + disallowedExp;
+
+    // Depreciation rows
+    let totalDeprFromRows = 0;
+    state.dep.forEach(d => {
+        const wdvClose = Math.max(0, d.wdvOpen + d.additions - d.deletions);
+        const deprAmt  = Math.round(wdvClose * d.rate / 100);
+        totalDeprFromRows += deprAmt;
+        const tr = document.querySelector(`tr[data-row-id="${d.id}"]`);
+        if (tr) {
+            const wdvCell  = tr.querySelector('[data-computed="wdvClose"]');
+            const depCell  = tr.querySelector('[data-computed="depAmt"]');
+            if (wdvCell) wdvCell.textContent = fmt(wdvClose);
+            if (depCell)  depCell.textContent = fmt(deprAmt);
+        }
+    });
+    setEl('totDepreciation', fmt(totalDeprFromRows));
+
+    const netBPBase = presumptiveSection ? presumptiveProfit : regularNetProfit;
+    const sec50Gain = Math.max(0, num('sec50Consideration') - num('sec50WDV'));
+    setEl('sec50Gain', fmt(sec50Gain));
+
+    const netBPIncome = netBPBase;  // sec50 treated separately as STCG
+    setEl('netBPIncome', fmt(netBPIncome));
+
+    const speculativeNet = num('speculativeIncome') - num('speculativeLoss');
+
+    // ── SALARY ────────────────────────────────────────────────────────────────
+    const gross    = Math.max(0, num('grossSal'));
+    const exempt   = Math.max(0, num('exemptAllow'));
+    const stdDed   = Math.max(0, num('stdDed'));
+    const entAllow = Math.max(0, num('entertainAllow'));
+    const pt       = Math.max(0, num('profTax'));
+    const netSalary = Math.max(0, gross - exempt);
+    const incomeSalary = Math.max(0, netSalary - stdDed - entAllow - pt);
+    setEl('netSal', fmt(netSalary));
+    setEl('incSal', fmt(incomeSalary));
+
+    // ── HOUSE PROPERTY ────────────────────────────────────────────────────────
+    let rawHPIncome = 0;
+    state.hp.forEach(prop => {
+        const inc = calcHPIncome(prop);
+        rawHPIncome += inc;
+        const tr = document.querySelector(`tr[data-row-id="${prop.id}"]`);
+        if (tr) {
+            const cell = tr.querySelector('[data-computed="hpInc"]');
+            if (cell) { cell.textContent = fmt(inc); cell.className = 'computed-cell ' + (inc < 0 ? 'loss' : 'gain'); }
+        }
+    });
+    const hpSetOff = Math.max(rawHPIncome, -200000);
+    setEl('totHP', fmt(hpSetOff));
+
+    // ── CAPITAL GAINS ─────────────────────────────────────────────────────────
+    const sumCG = (arr) => {
+        let total = 0;
+        arr.forEach(r => {
+            const gain = r.salePrice - r.cost;
+            total += gain;
+            const tr = document.querySelector(`tr[data-row-id="${r.id}"]`);
+            if (tr) {
+                const c = tr.querySelector('[data-computed="gain"]');
+                if (c) { c.textContent = fmt(gain); c.className = 'computed-cell ' + (gain < 0 ? 'loss' : 'gain'); }
+            }
+        });
+        return total;
+    };
+
+    const stcg111aRaw  = sumCG(state.stcg111a);
+    const stcgOtherRaw = sumCG(state.stcgOther) + sec50Gain; // sec50 goes to STCG Other
+    const ltcg112aRaw  = sumCG(state.ltcg112a);
+    const ltcgOtherRaw = sumCG(state.ltcgOther);
+
+    setEl('totSTCG111A', fmt(sumCG(state.stcg111a)));
+    setEl('totSTCGOther', fmt(sumCG(state.stcgOther)));
+    setEl('totLTCG112A', fmt(ltcg112aRaw));
+    setEl('totLTCGOther', fmt(ltcgOtherRaw));
+
+    // ── OTHER SOURCES ─────────────────────────────────────────────────────────
+    const osIncome = num('intSavingBank') + num('intTermDeposit') + num('intITRefund') +
+        num('intOthers') + num('dividend') + num('familyPension') + num('anyOtherIncome');
+    setEl('totOS', fmt(osIncome));
+
+    // ── BALANCE SHEET ─────────────────────────────────────────────────────────
+    const bsLiab = ['bsPropCap','bsReserves','bsSecuredLoans','bsUnsecuredLoans','bsSundryCred','bsOtherLiab','bsProvisions'].reduce((s,k)=>s+numKey(k),0);
+    const bsAssets = ['bsFixedAssets','bsLongTermInv','bsInventories','bsSundryDebtors','bsCashBank','bsLoansAdv','bsOtherAssets'].reduce((s,k)=>s+numKey(k),0);
+    setEl('bsTotLiab', fmt(bsLiab));
+    setEl('bsTotAssets', fmt(bsAssets));
+    const bsDiff = bsLiab - bsAssets;
+    const bsNote = document.getElementById('bsBalanceNote');
+    if (bsNote) {
+        bsNote.style.display = (bsLiab > 0 || bsAssets > 0) && Math.abs(bsDiff) > 1 ? '' : 'none';
+        setEl('bsDiff', fmt(Math.abs(bsDiff)));
+    }
+
+    // ── GTI ───────────────────────────────────────────────────────────────────
+    const gtiBeforeLoss = incomeSalary + netBPIncome + speculativeNet + hpSetOff +
+        stcg111aRaw + stcgOtherRaw + ltcg112aRaw + ltcgOtherRaw + osIncome;
+
+    // ── LOSS SETOFF ───────────────────────────────────────────────────────────
+    const incomes = {
+        salary: incomeSalary, bp: netBPIncome, speculative: speculativeNet,
+        hp: hpSetOff, stcg111a: stcg111aRaw, stcgOther: stcgOtherRaw,
+        ltcg112a: ltcg112aRaw, ltcgOther: ltcgOtherRaw, os: osIncome
+    };
+    const lossResult = runLossSetoff(incomes);
+    const adj = lossResult.adjusted;
+
+    // Update CYLA table
+    setEl('cyla_sal_before', fmt(incomeSalary));
+    setEl('cyla_sal_hp', lossResult.setoff.hpInterHead > 0 ? fmt(-lossResult.setoff.hpInterHead) : '—');
+    setEl('cyla_sal_after', fmt(adj.salary));
+    setEl('cyla_bp_before', fmt(netBPIncome));
+    setEl('cyla_bp_hp', '—');
+    setEl('cyla_bp_bf', lossResult.setoff.bfBusApplied > 0 ? fmt(-lossResult.setoff.bfBusApplied) : '—');
+    setEl('cyla_bp_after', fmt(adj.bp));
+    setEl('cyla_s111a_before', fmt(stcg111aRaw));
+    setEl('cyla_s111a_after', fmt(adj.stcg111a));
+    setEl('cyla_soth_before', fmt(stcgOtherRaw));
+    setEl('cyla_soth_after', fmt(adj.stcgOther));
+    setEl('cyla_l112a_before', fmt(ltcg112aRaw));
+    setEl('cyla_l112a_after', fmt(adj.ltcg112a));
+    setEl('cyla_loth_before', fmt(ltcgOtherRaw));
+    setEl('cyla_loth_after', fmt(adj.ltcgOther));
+    setEl('cyla_os_before', fmt(osIncome));
+    setEl('cyla_os_after', fmt(adj.os));
+    setEl('cyla_gti_after', fmt(adj.salary + adj.bp + adj.stcg111a + adj.stcgOther + adj.ltcg112a + adj.ltcgOther + adj.os));
+
+    // CFL
+    setEl('cfl_bus_cy', fmt(lossResult.cyBusLoss));
+    setEl('cfl_bus_bf', fmt(lossResult.bfBusRemaining));
+    setEl('cfl_bus_total', fmt(lossResult.carryForward.bus));
+    setEl('cfl_hp_cy', fmt(lossResult.cyHPUnabsorbed));
+    setEl('cfl_hp_bf', fmt(lossResult.bfHPRemaining));
+    setEl('cfl_hp_total', fmt(lossResult.carryForward.hp));
+    setEl('cfl_stcg_cy', fmt(lossResult.cySTCGLoss));
+    setEl('cfl_stcg_bf', fmt(lossResult.bfSTCGRemaining));
+    setEl('cfl_stcg_total', fmt(lossResult.carryForward.stcg));
+    setEl('cfl_ltcg_cy', fmt(lossResult.cyLTCGLoss));
+    setEl('cfl_ltcg_bf', fmt(lossResult.bfLTCGRemaining));
+    setEl('cfl_ltcg_total', fmt(lossResult.carryForward.ltcg));
+
+    const gti = adj.salary + adj.bp + adj.stcg111a + adj.stcgOther + adj.ltcg112a + adj.ltcgOther + adj.os;
+
+    // ── DEDUCTIONS (Old Regime) ───────────────────────────────────────────────
+    let totalDed = 0;
+    if (state.regime === 'old') {
+        const raw80C   = Math.max(0, num('ded80C'));
+        const raw80CCC = Math.max(0, num('ded80CCC'));
+        const cap80C   = Math.min(raw80C, 150000);
+        const cap80CCC = Math.min(raw80CCC, Math.max(0, 150000 - cap80C));
+        const ded80CCD1B = Math.min(Math.max(0,num('ded80CCD1B')), 50000);
+        const ded80D   = Math.max(0,num('ded80D'));
+        const ded80E   = Math.max(0,num('ded80E'));
+        const ded80G   = Math.min(Math.max(0,num('ded80G')), gti * 0.1);
+        const ded80GG  = Math.min(Math.max(0,num('ded80GG')), 60000);
+        const ded80TTA = Math.min(Math.max(0,num('ded80TTA')), 10000);
+        const ded80TTB = Math.min(Math.max(0,num('ded80TTB')), 50000);
+        const ded80U   = Math.max(0,num('ded80U'));
+        const ded80IA  = Math.max(0,num('ded80IA'));
+        const dedOther = Math.max(0,num('dedOther'));
+
+        setEl('ded80C_cap', fmt(cap80C));
+        setEl('ded80CCC_cap', fmt(cap80CCC));
+        setEl('ded80CCD1B_cap', fmt(ded80CCD1B));
+        setEl('ded80D_cap', fmt(ded80D));
+        setEl('ded80E_cap', fmt(ded80E));
+        setEl('ded80G_cap', fmt(ded80G));
+        setEl('ded80GG_cap', fmt(ded80GG));
+        setEl('ded80TTA_cap', fmt(ded80TTA));
+        setEl('ded80TTB_cap', fmt(ded80TTB));
+        setEl('ded80U_cap', fmt(ded80U));
+        setEl('ded80IA_cap', fmt(ded80IA));
+        setEl('dedOther_cap', fmt(dedOther));
+
+        totalDed = cap80C + cap80CCC + ded80CCD1B + ded80D + ded80E + ded80G + ded80GG + ded80TTA + ded80TTB + ded80U + ded80IA + dedOther;
+    }
+    setEl('totDed', fmt(totalDed));
+
+    // ── TOTAL INCOME ──────────────────────────────────────────────────────────
+    const totalIncome = R10(Math.max(0, gti - totalDed));
+
+    // ── TAX COMPUTATION ───────────────────────────────────────────────────────
+    const stcg111aAdj  = Math.max(0, adj.stcg111a);
+    const ltcg112aAdj  = Math.max(0, adj.ltcg112a);
+    const ltcgOtherAdj = Math.max(0, adj.ltcgOther);
+    const normalIncomeTaxable = Math.max(0, totalIncome - stcg111aAdj - ltcg112aAdj - ltcgOtherAdj);
+
+    const normalTax = calcNormalSlabTax(normalIncomeTaxable, state.regime);
+    const stcg111aTaxRaw = stcg111aAdj * 0.20;
+    const ltcg112aTaxable = Math.max(0, ltcg112aAdj - 125000);
+    const ltcg112aTaxRaw = ltcg112aTaxable * 0.125;
+    const ltcgOtherTaxRaw = ltcgOtherAdj * 0.20;
+
+    const stcg111aTax  = R10(stcg111aTaxRaw);
+    const ltcg112aTax  = R10(ltcg112aTaxRaw);
+    const ltcgOtherTax = R10(ltcgOtherTaxRaw);
+
+    const totalBeforeRebate = R10(normalTax + stcg111aTaxRaw + ltcg112aTaxRaw + ltcgOtherTaxRaw);
+    const rebate87A = calcRebate87A(totalIncome, normalTax, state.regime);
+    const taxAfterRebate = Math.max(0, Math.round(totalBeforeRebate - rebate87A));
+
+    const resStatus = document.getElementById('residentialStatus')?.value || 'RES';
+    const sResult = calcSurcharge(taxAfterRebate, totalIncome, resStatus);
+    const cess = R10((taxAfterRebate + sResult.surcharge) * 0.04);
+    const taxLiability = taxAfterRebate + sResult.surcharge + cess;
+
+    // ── TAX PAID ──────────────────────────────────────────────────────────────
+    const totalTDS1   = state.tds1.reduce((s,r) => s + (r.amount||0), 0);
+    const totalTDS2   = state.tds2.reduce((s,r) => s + (r.amount||0), 0);
+    const totalAdvTax = state.advTax.reduce((s,r) => s + (r.amount||0), 0);
+    const totalTaxPaid = totalTDS1 + totalTDS2 + totalAdvTax;
+    setEl('totTDS1', fmt(totalTDS1));
+    setEl('totTDS2', fmt(totalTDS2));
+    setEl('totAdvTax', fmt(totalAdvTax));
+
+    const refund = taxLiability - totalTaxPaid;
+
+    // ── STORE STATE ───────────────────────────────────────────────────────────
+    Object.assign(state.computed, {
+        netSalary, incomeSalary,
+        netBPBase, netBPIncome, sec50Gain,
+        speculativeNet, speculativeAdj: adj.speculative,
+        hpSetOff,
+        stcg111aRaw, stcgOtherRaw, ltcg112aRaw, ltcgOtherRaw,
+        stcg111aAdj, ltcg112aAdj, ltcgOtherAdj, ltcg112aTaxable,
+        osIncome, gtiBeforeLoss, gti, totalDed, totalIncome,
+        normalIncomeTaxable, normalTax,
+        stcg111aTax, ltcg112aTax, ltcgOtherTax,
+        totalBeforeRebate, rebate87A, taxAfterRebate,
+        surcharge: sResult.surcharge, marginalRelief: sResult.marginalRelief,
+        surchargeRate: sResult.surchargeRate, rawSurcharge: sResult.rawSurcharge,
+        cess, taxLiability, totalTDS1, totalTDS2, totalAdvTax, totalTaxPaid, refund,
+        lossSetoffTotal: lossResult.totalSetoff,
+        carryForward: lossResult.carryForward,
+        presumptiveSection, presumptiveTurnover: num('presumptiveTurnover'), presumptiveProfit,
+        grossReceipts, regularNetProfit
+    });
+
+    // ── UPDATE SUMMARY ────────────────────────────────────────────────────────
+    setEl('sumSalary', fmt(incomeSalary));
+    setEl('sumBP', fmt(netBPIncome + sec50Gain));
+    setEl('sumBPBase', fmt(netBPIncome));
+    setEl('sumSec50', sec50Gain > 0 ? fmt(sec50Gain) : '—');
+    setEl('sumHP', fmt(hpSetOff));
+    setEl('sumSTCG111A', fmt(stcg111aRaw));
+    setEl('sumSTCGOther', fmt(stcgOtherRaw));
+    setEl('sumLTCG112A', fmt(ltcg112aRaw));
+    setEl('sumLTCGOther', fmt(ltcgOtherRaw));
+    setEl('sumOS', fmt(osIncome));
+    setEl('sumGTI', fmt(gtiBeforeLoss));
+    setEl('sumLossSetoff', lossResult.totalSetoff > 0 ? fmt(-lossResult.totalSetoff) : '—');
+    setEl('sumDed', fmt(totalDed));
+    setEl('sumTI', fmt(totalIncome));
+    setEl('sumTax', fmt(taxLiability));
+    setEl('sumPaid', fmt(totalTaxPaid));
+    setEl('sumRef', fmt(Math.abs(refund)));
+
+    const sumRow = document.getElementById('sumRow');
+    const sumLabel = document.getElementById('sumLabel');
+    if (refund < 0) {
+        sumRow.className = 'summary-row refund-row';
+        sumLabel.textContent = '🟢 REFUND DUE';
+    } else if (refund > 0) {
+        sumRow.className = 'summary-row payable-row';
+        sumLabel.textContent = '🔴 TAX PAYABLE';
+    } else {
+        sumRow.className = 'summary-row';
+        sumLabel.textContent = '✅ NIL — Tax Settled';
+    }
+
+    // ── UPDATE BREAKDOWN ──────────────────────────────────────────────────────
+    setEl('bdNormalInc', fmt(normalIncomeTaxable));
+    setEl('bdNormalTax', fmt(normalTax));
+    setEl('bdSTCG111ATax', fmt(stcg111aTax));
+    setEl('bdLTCG112ATax', fmt(ltcg112aTax));
+    setEl('bdLTCGOtherTax', fmt(ltcgOtherTax));
+    setEl('bdTotalBeforeRebate', fmt(totalBeforeRebate));
+    setEl('bdRebate', fmt(rebate87A));
+    setEl('bdAfterRebate', fmt(taxAfterRebate));
+    const surRatePct = Math.round(sResult.surchargeRate * 100);
+    setEl('bdSurchargeLabel', `Surcharge${surRatePct > 0 ? ` @ ${surRatePct}%` : ''}`);
+    setEl('bdSurcharge', fmt(sResult.surcharge));
+    const mrLine = document.getElementById('bdMarginalReliefLine');
+    if (mrLine) mrLine.style.display = sResult.marginalRelief > 0 ? '' : 'none';
+    setEl('bdMarginalRelief', fmt(sResult.marginalRelief));
+    setEl('bdCess', fmt(cess));
+    setEl('bdNetTax', fmt(taxLiability));
+    setEl('bdTDS1', fmt(totalTDS1));
+    setEl('bdTDS2', fmt(totalTDS2));
+    setEl('bdAdvTax', fmt(totalAdvTax));
+    const finalLabel = document.getElementById('bdFinalLabel');
+    const finalAmt   = document.getElementById('bdFinalAmt');
+    if (finalLabel && finalAmt) {
+        if (refund < 0) {
+            finalLabel.textContent = 'Refund Due';
+            finalAmt.style.color = 'var(--green)';
+            finalAmt.textContent = fmt(Math.abs(refund));
+        } else {
+            finalLabel.textContent = 'Net Tax Payable';
+            finalAmt.style.color = refund > 0 ? 'var(--red)' : 'var(--green)';
+            finalAmt.textContent = fmt(refund);
+        }
+    }
+}
+
+// ============================================================
+// SECTION 9 — SAVE / LOAD
+// ============================================================
+function gatherFormFields() {
+    const fields = {};
+    document.querySelectorAll('[data-key]').forEach(el => { fields[el.dataset.key] = el.value; });
+    return fields;
+}
+
+function restoreFormFields(fields) {
+    Object.entries(fields).forEach(([key, val]) => {
+        const el = document.querySelector(`[data-key="${key}"]`);
+        if (el) el.value = val;
+    });
+}
+
+function saveAll() {
+    const snapshot = {
+        version: 1,
+        regime: state.regime,
+        fields: gatherFormFields(),
+        hp: state.hp, stcg111a: state.stcg111a, stcgOther: state.stcgOther,
+        ltcg112a: state.ltcg112a, ltcgOther: state.ltcgOther,
+        tds1: state.tds1, tds2: state.tds2, advTax: state.advTax, dep: state.dep
+    };
+    try {
+        localStorage.setItem('ITR3_v1', JSON.stringify(snapshot));
+        toast('Draft saved successfully', 'success');
+    } catch(e) { toast('Save failed: ' + e.message, 'error'); }
+}
+
+function loadAll() {
+    const raw = localStorage.getItem('ITR3_v1');
+    if (!raw) { toast('No saved draft found', 'error'); return; }
+    let snapshot;
+    try { snapshot = JSON.parse(raw); }
+    catch(e) { toast('Corrupt saved data', 'error'); return; }
+
+    if (snapshot.fields) restoreFormFields(snapshot.fields);
+    if (snapshot.regime) { state.regime = snapshot.regime; applyRegime(snapshot.regime, false); }
+
+    const clearMap = {
+        hp:'hpBody', stcg111a:'stcg111aBody', stcgOther:'stcgOtherBody',
+        ltcg112a:'ltcg112aBody', ltcgOther:'ltcgOtherBody',
+        tds1:'tds1Body', tds2:'tds2Body', advTax:'advTaxBody', dep:'depBody'
+    };
+    Object.entries(clearMap).forEach(([sec, bodyId]) => {
+        const el = document.getElementById(bodyId);
+        if (el) el.innerHTML = '';
+        state[sec] = [];
+    });
+
+    const addFns = {
+        hp: r => { state.hp.push(r); addHPRow(r); },
+        stcg111a:  r => { state.stcg111a.push(r);  addCGRow('stcg111a', r); },
+        stcgOther: r => { state.stcgOther.push(r); addCGRow('stcgOther', r); },
+        ltcg112a:  r => { state.ltcg112a.push(r);  addCGRow('ltcg112a', r); },
+        ltcgOther: r => { state.ltcgOther.push(r); addCGRow('ltcgOther', r); },
+        tds1:    r => { state.tds1.push(r);    addTDS1Row(r);    },
+        tds2:    r => { state.tds2.push(r);    addTDS2Row(r);    },
+        advTax:  r => { state.advTax.push(r);  addAdvTaxRow(r);  },
+        dep:     r => { state.dep.push(r);     addDepRow(r);     }
+    };
+    Object.entries(addFns).forEach(([sec, fn]) => (snapshot[sec]||[]).forEach(fn));
+
+    recalc();
+    toast('Draft loaded successfully', 'success');
+}
+
+// ============================================================
+// SECTION 10 — JSON BUILDER (ITR-3 SCHEMA)
+// ============================================================
+function buildJSON() {
+    const c   = state.computed;
+    const fv  = key => { const el = document.querySelector(`[data-key="${key}"]`); return el ? el.value.trim() : ''; };
+    const fi  = key => parseInt(fv(key)) || 0;
+    const fn  = key => parseFloat(fv(key)) || 0;
+    const fup = key => fv(key).toUpperCase();
+
+    const totalSalaryTDS = Math.round(c.totalTDS1 || 0);
+    const totalNonSalTDS = Math.round(c.totalTDS2 || 0);
+    const totalAdvanceTax = Math.round(c.totalAdvTax || 0);
+    const totalTaxPaid = totalSalaryTDS + totalNonSalTDS + totalAdvanceTax;
+
+    const s111aNet   = Math.round(Math.max(0, c.stcg111aAdj   || 0));
+    const sOthNet    = Math.round(Math.max(0, c.stcgOtherRaw  || 0));
+    const l112aNet   = Math.round(Math.max(0, c.ltcg112aAdj   || 0));
+    const l112aTaxable = Math.round(c.ltcg112aTaxable || 0);
+    const lOthNet    = Math.round(Math.max(0, c.ltcgOtherAdj  || 0));
+
+    // Schedule S
+    const schedS = {
+        TotalGrossSalary: Math.round(fn('grossSal')),
+        AllwncExtentExemptUs10: Math.round(fn('exemptAllow')),
+        NetSalary: Math.round(c.netSalary || 0),
+        DeductionUS16: Math.round(fn('stdDed') + fn('entertainAllow') + fn('profTax')),
+        DeductionUnderSection16ia: Math.round(fn('stdDed')),
+        EntertainmntalwncUs16ii: Math.round(fn('entertainAllow')),
+        ProfessionalTaxUs16iii: Math.round(fn('profTax')),
+        TotIncUnderHeadSalaries: Math.round(c.incomeSalary || 0)
+    };
+
+    // HP entries
+    const hpEntries = state.hp.map(prop => {
+        const inc = calcHPIncome(prop);
+        const gav = prop.type === 'L' ? Math.max(0, prop.rent) : 0;
+        const nav = prop.type === 'L' ? Math.max(0, gav - prop.tax) : 0;
+        const stdD = Math.round(nav * 0.3);
+        return {
+            TypeOfHP: prop.type === 'S' ? 'SOP' : 'LOP',
+            GrossRentReceived: Math.round(prop.type === 'L' ? prop.rent : 0),
+            MunicipalTaxPaid: Math.round(prop.tax),
+            AnnualValue: Math.round(nav),
+            StandardDeduction30Percent: stdD,
+            InterestPayable: Math.round(prop.interest),
+            IncomeFromHP: Math.round(inc)
+        };
+    });
+
+    // Business / Profession
+    const itr3BP = {
+        BusinessIncOthThanSpec: {
+            GrsPftFromBus: Math.round(c.grossReceipts || 0),
+            ExpFromBus: Math.round(fn('cogs') + fn('expSalary') + fn('expRent') + fn('expRepairs') + fn('expPowerFuel') + fn('expDepreciation') + fn('expProfFees') + fn('expAdvertisement') + fn('expTravel') + fn('expInterestBusiness') + fn('expBadDebts') + fn('expOther')),
+            NetProfFromBus: Math.round(c.regularNetProfit || 0)
+        },
+        PresumptiveBusiness: c.presumptiveSection ? {
+            Section: c.presumptiveSection,
+            GrossReceipts: Math.round(c.presumptiveTurnover || 0),
+            NetProfit: Math.round(c.presumptiveProfit || 0)
+        } : null,
+        IncChrgUnHdProftGain: Math.round(c.netBPIncome || 0),
+        BusSetoffCurrYr: {
+            LossSetOffOnBusLoss: 0,
+            SpeculativeInc: {
+                IncOfCurYrUnderThatHead: Math.round(Math.max(0, c.speculativeNet || 0)),
+                BusLossSetoff: 0,
+                IncOfCurYrAfterSetOff: Math.round(Math.max(0, c.speculativeAdj || c.speculativeNet || 0))
+            }
+        }
+    };
+
+    // Schedule CG
+    const schedCG = {
+        ShortTermCapGainFor23: {
+            EquityMFonSTT: [{
+                MFSectionCode: '1A',
+                EquityMFonSTTDtls: {
+                    FullConsideration: Math.round(state.stcg111a.reduce((s,r)=>s+r.salePrice,0)),
+                    DeductSec48: {
+                        AquisitCost: Math.round(state.stcg111a.reduce((s,r)=>s+r.cost,0)),
+                        ImproveCost: 0,
+                        ExpOnTrans: 0,
+                        TotalDedn: Math.round(state.stcg111a.reduce((s,r)=>s+r.cost,0))
+                    },
+                    BalanceCG: s111aNet,
+                    LossSec94of7Or94of8: 0,
+                    CapgainonAssets: s111aNet
+                },
+                TotalCapGainonassets: s111aNet
+            }],
+            SaleOnOtherAssets: {
+                FullValueConsdOthUnqshr: Math.round(state.stcgOther.reduce((s,r)=>s+r.salePrice,0)),
+                FullConsideration: Math.round(state.stcgOther.reduce((s,r)=>s+r.salePrice,0)),
+                DeductSec48: Math.round(state.stcgOther.reduce((s,r)=>s+r.cost,0)),
+                BalanceCG: sOthNet,
+                LossSec94of7Or94of8: 0,
+                CapgainonAssets: sOthNet
+            },
+            TotalSTCG: Math.round(s111aNet + sOthNet)
+        },
+        LongTermCapGain23: {
+            SaleOfEquityShareUs112A: {
+                BalanceCG: l112aNet,
+                CapgainonAssets: l112aTaxable
+            },
+            SaleofBondsDebntr: {
+                FullConsideration: Math.round(state.ltcgOther.reduce((s,r)=>s+r.salePrice,0)),
+                DeductSec48: Math.round(state.ltcgOther.reduce((s,r)=>s+r.cost,0)),
+                BalanceCG: lOthNet,
+                CapgainonAssets: lOthNet
+            },
+            TotalLTCG: Math.round(l112aNet + lOthNet)
+        },
+        TotScheduleCGFor23: Math.round(s111aNet + sOthNet + l112aNet + lOthNet)
+    };
+
+    // Schedule OS
+    const schedOS = {
+        IncOthThanOwnRaceHorse: {
+            DividendGross: Math.round(fn('dividend')),
+            DividendOthThan22e: Math.round(fn('dividend')),
+            Dividend22e: 0,
+            InterestGross: Math.round(fn('intSavingBank')+fn('intTermDeposit')+fn('intITRefund')+fn('intOthers')),
+            IntrstFrmSavingBank: Math.round(fn('intSavingBank')),
+            IntrstFrmTermDeposit: Math.round(fn('intTermDeposit')),
+            IntrstFrmIncmTaxRefund: Math.round(fn('intITRefund')),
+            IntrstFrmOthers: Math.round(fn('intOthers')),
+            FamilyPension: Math.round(fn('familyPension')),
+            AnyOtherIncome: Math.round(fn('anyOtherIncome')),
+            BalanceNoRaceHorse: Math.round(c.osIncome || 0)
+        },
+        TotOthSrcNoRaceHorse: Math.round(c.osIncome || 0),
+        IncChargeable: Math.round(c.osIncome || 0)
+    };
+
+    // Schedule VIA
+    const makeVIA = () => {
+        const old = state.regime === 'old';
+        return {
+            Section80C: old ? Math.min(Math.round(fn('ded80C')), 150000) : 0,
+            Section80CCC: 0,
+            Section80CCDEmployeeOrSE: 0,
+            Section80CCD1B: old ? Math.min(Math.round(fn('ded80CCD1B')),50000) : 0,
+            Section80CCDEmployer: 0,
+            Section80D: old ? Math.round(fn('ded80D')) : 0,
+            Section80DD: 0, Section80DDB: 0,
+            Section80E: old ? Math.round(fn('ded80E')) : 0,
+            Section80EE: 0, Section80EEA: 0, Section80EEB: 0,
+            Section80G: old ? Math.min(Math.round(fn('ded80G')), Math.round((c.gti||0)*0.1)) : 0,
+            Section80GG: old ? Math.min(Math.round(fn('ded80GG')), 60000) : 0,
+            Section80GGA: 0, Section80GGC: 0,
+            Section80IA: old ? Math.round(fn('ded80IA')) : 0,
+            Section80IAB: 0, Section80IB: old ? Math.round(fn('ded80IA')) : 0,
+            Section80IBA: 0, Section80IC: 0, Section80JJA: 0, Section80JJAA: 0,
+            Section80QQB: 0, Section80RRB: 0,
+            Section80TTA: old ? Math.min(Math.round(fn('ded80TTA')),10000) : 0,
+            Section80TTB: old ? Math.min(Math.round(fn('ded80TTB')),50000) : 0,
+            Section80U: old ? Math.round(fn('ded80U')) : 0,
+            AnyOthSec80CCH: old ? Math.round(fn('dedOther')) : 0,
+            TotalChapVIADeductions: Math.round(c.totalDed || 0)
+        };
+    };
+
+    // TDS1 Salary
+    const tds1Entries = state.tds1.map((r, idx) => ({
+        SlNo: idx + 1,
+        TAN: (r.tan || '').toUpperCase(),
+        NameOfDeductor: r.employer || '',
+        TDSDeductorType: 'S',
+        TotalAmtCredited: Math.round(r.grossSalary || 0),
+        TDSAmtDeductCollected: Math.round(r.amount || 0),
+        TDSAmtClaimedThisYr: Math.round(r.amount || 0)
+    }));
+
+    // TDS2 Non-Salary
+    const tds2Entries = state.tds2.map((r, idx) => ({
+        SlNo: idx + 1,
+        TAN: (r.tan || '').toUpperCase(),
+        NameOfDeductor: r.deductor || '',
+        NatureOfPayment: r.nature || 'Professional Fees',
+        AmtCredited: Math.round(r.grossAmt || 0),
+        TDSDeducted: Math.round(r.amount || 0),
+        TDSClaimed: Math.round(r.amount || 0)
+    }));
+
+    const advTaxEntries = state.advTax.map(r => ({
+        BSRCode: (r.bsr || '').replace(/\s/g, ''),
+        DateDep: r.date || '',
+        SrlNoOfChaln: (r.serial || '00001'),
+        Amt: Math.round(r.amount || 0)
+    }));
+
+    // Balance Sheet
+    const parta_bs = {
+        FundSrc: {
+            PropFund: {
+                PropCap: Math.round(numKey('bsPropCap')),
+                ResrNSurp: {
+                    RevResr: Math.round(numKey('bsReserves')),
+                    TotResrNSurp: Math.round(numKey('bsReserves'))
+                },
+                TotPropFund: Math.round(numKey('bsPropCap') + numKey('bsReserves'))
+            },
+            LoanFunds: {
+                SecrLoan: {
+                    RupeeLoan: { FrmBank: Math.round(numKey('bsSecuredLoans')), FrmOthrs: 0, TotRupeeLoan: Math.round(numKey('bsSecuredLoans')) },
+                    TotSecrLoan: Math.round(numKey('bsSecuredLoans'))
+                },
+                UnsecrLoan: {
+                    FrmBank: 0,
+                    FrmOthrs: Math.round(numKey('bsUnsecuredLoans')),
+                    TotUnSecrLoan: Math.round(numKey('bsUnsecuredLoans'))
+                },
+                TotLoanFund: Math.round(numKey('bsSecuredLoans') + numKey('bsUnsecuredLoans'))
+            },
+            TotFundSrc: Math.round(numKey('bsPropCap')+numKey('bsReserves')+numKey('bsSecuredLoans')+numKey('bsUnsecuredLoans')+numKey('bsSundryCred')+numKey('bsOtherLiab')+numKey('bsProvisions'))
+        },
+        FundApply: {
+            FixedAsset: {
+                NetBlock: Math.round(numKey('bsFixedAssets')),
+                TotFixedAsset: Math.round(numKey('bsFixedAssets'))
+            },
+            Investments: {
+                TotInvestments: Math.round(numKey('bsLongTermInv'))
+            },
+            CurrAssetLoanAdv: {
+                CurrAsset: {
+                    Inventories: { FinOrTradGood: Math.round(numKey('bsInventories')), TotInventries: Math.round(numKey('bsInventories')) },
+                    SndryDebtors: Math.round(numKey('bsSundryDebtors')),
+                    CashOrBankBal: { CashInHand: 0, BalWithBank: Math.round(numKey('bsCashBank')) },
+                    TotCurrAsset: Math.round(numKey('bsInventories')+numKey('bsSundryDebtors')+numKey('bsCashBank'))
+                },
+                LoanAdv: {
+                    AdvRecoverable: Math.round(numKey('bsLoansAdv')),
+                    TotLoanAdv: Math.round(numKey('bsLoansAdv'))
+                },
+                TotCurrAssetLoanAdv: Math.round(numKey('bsInventories')+numKey('bsSundryDebtors')+numKey('bsCashBank')+numKey('bsLoansAdv')+numKey('bsOtherAssets'))
+            }
+        }
+    };
+
+    // PartB-TI
+    const partBTI = {
+        Salaries: Math.round(c.incomeSalary || 0),
+        IncomeFromHP: Math.round(c.hpSetOff || 0),
+        ProfBusGain: {
+            ProfGainNoSpecBus: Math.round(c.netBPIncome || 0),
+            ProfGainSpecBus: Math.round(Math.max(0, c.speculativeNet || 0)),
+            ProfGainSpecifiedBus: 0,
+            ProfIncome115BBF: 0,
+            TotProfBusGain: Math.round((c.netBPIncome || 0) + Math.max(0, c.speculativeNet || 0))
+        },
+        CapGain: {
+            ShortTerm: {
+                ShortTerm15Per: 0,
+                ShortTerm20Per: s111aNet,
+                ShortTerm30Per: 0,
+                ShortTermAppRate: sOthNet,
+                ShortTermSplRateDTAA: 0,
+                TotalShortTerm: Math.round(s111aNet + sOthNet)
+            },
+            LongTerm: {
+                LongTerm10Per: 0,
+                LongTerm12_5Per: l112aTaxable,
+                LongTerm20Per: lOthNet,
+                LongTermSplRateDTAA: 0,
+                TotalLongTerm: Math.round(l112aTaxable + lOthNet)
+            },
+            ShortTermLongTermTotal: Math.round(s111aNet + sOthNet + l112aTaxable + lOthNet),
+            TotalCapGains: Math.round(s111aNet + sOthNet + l112aNet + lOthNet)
+        },
+        IncFromOS: {
+            OtherSrcThanOwnRaceHorse: Math.round(c.osIncome || 0),
+            TotIncFromOS: Math.round(c.osIncome || 0)
+        },
+        TotalTI: Math.round(c.gtiBeforeLoss || 0),
+        GrossTotalIncome: Math.round(c.gti || 0),
+        DeductionsUndSchVIADtl: {
+            TotDeductUndSchVIA: Math.round(c.totalDed || 0)
+        },
+        TotalIncome: Math.round(c.totalIncome || 0),
+        LossesOfCurrentYearCarriedFwd: Math.round((c.carryForward?.bus||0)+(c.carryForward?.hp||0)+(c.carryForward?.stcg||0)+(c.carryForward?.ltcg||0)),
+        DeemedIncomeUs115JC: 0
+    };
+
+    // PartB_TTI
+    const partBTTI = {
+        ComputationOfTaxLiability: {
+            TaxPayableOnTI: {
+                TaxAtNormalRatesOnAggrInc: Math.round(c.normalTax || 0),
+                TaxAtSpecialRates: Math.round((c.totalBeforeRebate || 0) - (c.normalTax || 0)),
+                TaxPayableOnTotInc: Math.round(c.totalBeforeRebate || 0)
+            },
+            Rebate87A: Math.round(c.rebate87A || 0),
+            TaxPayableOnRebate: Math.round(c.taxAfterRebate || 0),
+            Surcharge25ofSI: 0,
+            SurchargeOnAboveCrore: Math.round(c.surcharge || 0),
+            TotalSurcharge: Math.round(c.surcharge || 0),
+            EducationCess: Math.round(c.cess || 0),
+            GrossTaxLiability: Math.round(c.taxLiability || 0),
+            GrossTaxPayable: Math.round(c.taxLiability || 0),
+            CreditUS115JD: 0,
+            TaxPayAfterCreditUs115JD: Math.round(c.taxLiability || 0),
+            TaxRelief: { Section89: 0, Section90: 0, Section91: 0, TotTaxRelief: 0 },
+            NetTaxLiability: Math.round(c.taxLiability || 0),
+            IntrstPay: { IntrstPayUs234A:0, IntrstPayUs234B:0, IntrstPayUs234C:0, LateFilingFee234F:0, TotalIntrstPay:0 },
+            AggregateTaxInterestLiability: Math.round(c.taxLiability || 0)
+        },
+        TaxPaid: {
+            TaxesPaid: {
+                AdvanceTax: totalAdvanceTax,
+                TDS: totalSalaryTDS + totalNonSalTDS,
+                TCS: 0,
+                SelfAssessmentTax: 0,
+                TotalTaxesPaid: totalTaxPaid
+            },
+            BalTaxPayable: Math.round(Math.max(0, c.refund || 0))
+        },
+        AssetOutIndiaFlag: 'NO',
+        Refund: {
+            RefundDue: Math.round(Math.max(0, -(c.refund || 0))),
+            BankAccountDtls: {
+                BankDtlsFlag: 'Y',
+                AddtnlBankDetails: fv('bankAccNo') ? [{
+                    IFSCCode: fup('bankIFSC'),
+                    BankName: fv('bankName'),
+                    BankAccountNo: fv('bankAccNo'),
+                    UseForRefund: 'Y',
+                    AccountType: fv('bankAccType') || 'SB'
+                }] : []
+            }
+        }
+    };
+
+    // Schedule CFL
+    const schedCFL = {
+        CurrentAYloss: {
+            LossSummaryDetail: {
+                TotalBussPTILossCF: Math.round(c.carryForward?.bus  || 0),
+                TotalHPPTILossCF:   Math.round(c.carryForward?.hp   || 0),
+                TotalSTCGPTILossCF: Math.round(c.carryForward?.stcg || 0),
+                TotalLTCGPTILossCF: Math.round(c.carryForward?.ltcg || 0)
+            }
+        }
+    };
+
+    // Schedule DEP
+    const schedDEP = {
+        SummaryFromDeprSch: {
+            TotalDepreciation: Math.round(state.dep.reduce((s,d) => {
+                const wdvClose = Math.max(0, d.wdvOpen + d.additions - d.deletions);
+                return s + Math.round(wdvClose * d.rate / 100);
+            }, 0))
+        }
+    };
+
+    const json = {
+        ITR: {
+            ITR3: {
+                CreationInfo: {
+                    SWVersionNo: '1.0',
+                    SWCreatedBy: 'SW29300057',
+                    JSONCreatedBy: 'SW29300057',
+                    JSONCreationDate: new Date().toISOString().split('T')[0],
+                    IntermediaryCity: fv('city'),
+                    Digest: ''
+                },
+                Form_ITR3: {
+                    FormName: 'ITR-3',
+                    Description: 'For Individuals and HUFs having income from Business or Profession',
+                    AssessmentYear: '2025-26',
+                    SchemaVer: 'Ver1.0',
+                    FormVer: 'Ver1.0'
+                },
+                PartA_GEN1: {
+                    PersonalInfo: {
+                        AssesseeName: {
+                            SurNameOrOrgName: fup('lastName'),
+                            FirstName: fup('firstName'),
+                            MiddleName: fup('middleName')
+                        },
+                        PAN: fup('pan'),
+                        Address: {
+                            ResidenceNo: fv('residenceNo'),
+                            LocalityOrArea: fv('localityOrArea'),
+                            CityOrTownOrDistrict: fv('city'),
+                            StateCode: fi('state'),
+                            CountryCode: 91,
+                            PinCode: fi('pincode'),
+                            CountryCodeMobile: 91,
+                            MobileNo: parseInt(fv('mobile'))||0,
+                            EmailAddress: fv('email')
+                        },
+                        DOB: fv('dob'),
+                        Status: fv('status') || 'I',
+                        AadhaarCardNo: fv('aadhaar').replace(/\s/g,'')
+                    },
+                    FilingStatus: {
+                        ReturnFileSec: parseInt(fv('returnSection')) || 11,
+                        OptOutNewTaxRegime: state.regime === 'old' ? 'Y' : 'N',
+                        ResidentialStatus: fv('residentialStatus') || 'RES',
+                        SeventhProvisio139: 'N',
+                        clauseiv7provisio139i: 'N',
+                        ConditionsResStatus: 8,
+                        BenefitUs115HFlg: 'N',
+                        PortugeseCC5A: 'N',
+                        AsseseeRepFlg: 'N',
+                        ItrFilingDueDate: '2025-10-31'  // October 31 for audit cases, else July 31
+                    }
+                },
+                PartA_GEN2: {
+                    AuditInfo: {
+                        AuditReqFlag: fv('auditRequired') || 'N'
+                    },
+                    NatOfBus: {
+                        NatureOfBusiness: [{
+                            NatureOfBusinessCode: fv('businessCode') || '04001',
+                            NameOfBusiness: fv('businessName') || '',
+                            MainBusiness: 'Y'
+                        }]
+                    }
+                },
+                PARTA_BS: parta_bs,
+                PARTA_PL: {
+                    CreditsToPL: {
+                        GrossProfitTrnsfFrmTrdAcc: Math.round(c.grossReceipts || 0),
+                        TotCreditsToPL: Math.round(c.grossReceipts || 0)
+                    },
+                    DebitsToPL: {
+                        EmployeeComp: {
+                            SalsWages: Math.round(fn('expSalary')),
+                            TotEmployeeComp: Math.round(fn('expSalary'))
+                        },
+                        RentExpdr: Math.round(fn('expRent')),
+                        RepairsBldg: Math.round(fn('expRepairs')),
+                        PowerFuel: Math.round(fn('expPowerFuel')),
+                        AuditFee: Math.round(fn('expProfFees')),
+                        Advertisement: Math.round(fn('expAdvertisement')),
+                        TravelExp: Math.round(fn('expTravel')),
+                        OtherExpenses: Math.round(fn('expOther')),
+                        NetProfitOrLoss: Math.round(c.regularNetProfit || 0)
+                    }
+                },
+                ScheduleS: schedS,
+                ...(hpEntries.length > 0 ? {
+                    ScheduleHP: {
+                        PropertyDtls: hpEntries,
+                        TotalIncomeChargeableUnderHP: Math.round(c.hpSetOff || 0)
+                    }
+                } : {}),
+                ITR3ScheduleBP: itr3BP,
+                ScheduleCGFor23: schedCG,
+                ScheduleOS: schedOS,
+                ScheduleVIA: { UsrDeductUndChapVIA: makeVIA(), DeductUndChapVIA: makeVIA() },
+                ScheduleDEP: schedDEP,
+                ScheduleCFL: schedCFL,
+                'PartB-TI': partBTI,
+                PartB_TTI: partBTTI,
+                ScheduleIT: {
+                    TaxPayment: advTaxEntries.length > 0 ? advTaxEntries : [],
+                    TotalTaxPayments: totalAdvanceTax
+                },
+                ScheduleTDS1: {
+                    TDSonSalary: tds1Entries.length > 0 ? tds1Entries : [],
+                    TotalTDSonSalaries: totalSalaryTDS
+                },
+                ScheduleTDS2: tds2Entries.length > 0 ? { TDSonOthThanSal: tds2Entries, TotTDSOthThanSal: totalNonSalTDS } : {},
+                ITR3ScheduleUD: {
+                    CurrAssYr: '2025-26',
+                    CurBalCFNY: 0,
+                    TotBFUDepritAmt: Math.round(fn('bfUnabsDepr')),
+                    TotDepritBalCFNY: 0,
+                    TotBFUAllowAmt: 0
+                },
+                Verification: {
+                    Declaration: {
+                        AssesseeVerName: `${fup('firstName')} ${fup('middleName')} ${fup('lastName')}`.replace(/\s+/g,' ').trim(),
+                        FatherName: fup('fatherName'),
+                        AssesseeVerPAN: fup('pan')
+                    },
+                    Capacity: fv('verCapacity') || 'S',
+                    Date: fv('verDate') || new Date().toISOString().split('T')[0],
+                    Place: fv('verPlace') || fv('city')
+                }
+            }
+        }
+    };
+
+    return JSON.parse(JSON.stringify(json, (_k, v) => v === undefined ? undefined : v));
+}
+
+function downloadJSON() {
+    const errors = validateAll();
+    if (errors.length > 0) {
+        toast('Validation failed — fix highlighted fields first', 'error');
+        errors.forEach(e => toast(`❌ Invalid format: ${e}`, 'error'));
+        return;
+    }
+
+    recalc(); // ensure computed values are fresh
+
+    const pan = (document.getElementById('pan')?.value || 'DRAFT').toUpperCase().replace(/[^A-Z0-9]/g,'');
+    const json = buildJSON();
+
+    // Soft warnings only — does NOT block download
+    const j = json.ITR?.ITR3;
+    const pi = j?.PartA_GEN1?.PersonalInfo;
+    const warnings = [];
+    if (!pi?.PAN)                         warnings.push('PAN not filled');
+    if (!pi?.AssesseeName?.FirstName)     warnings.push('First name not filled');
+    if (!pi?.DOB)                         warnings.push('Date of Birth not filled');
+    if (!pi?.Address?.MobileNo)           warnings.push('Mobile not filled');
+    if (!pi?.Address?.EmailAddress)       warnings.push('Email not filled');
+    if (state.tds1.length === 0)          warnings.push('No TDS (salary) entries — verify if applicable');
+    warnings.forEach(w => toast(`⚠ ${w}`, 'info'));
+
+    const blob = new Blob([JSON.stringify(json, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `ITR3_${pan}_AY2025-26.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast(`Downloaded: ITR3_${pan}_AY2025-26.json`, 'success');
+}
+
+// ============================================================
+// SECTION 11 — EVENT LISTENERS & INIT
+// ============================================================
+function applyRegime(r, doRecalc = true) {
+    document.querySelectorAll('.regime-card').forEach(c => c.classList.remove('selected'));
+    document.getElementById(r === 'new' ? 'newCard' : 'oldCard').classList.add('selected');
+    document.querySelector(`input[value="${r}"]`).checked = true;
+    const stdDedEl = document.getElementById('stdDed');
+    if (stdDedEl) stdDedEl.value = r === 'new' ? 75000 : 50000;
+    const dedSection = document.getElementById('sec-deductions');
+    if (dedSection) r === 'old' ? dedSection.classList.remove('hidden') : dedSection.classList.add('hidden');
+    state.regime = r;
+    if (doRecalc) recalc();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    setupAccordions();
+
+    // Set today's date for verification
+    const verDate = document.getElementById('verDate');
+    if (verDate) verDate.value = new Date().toISOString().split('T')[0];
+
+    // Regime cards
+    document.querySelectorAll('.regime-card').forEach(card => {
+        card.addEventListener('click', () => applyRegime(card.dataset.regime));
+    });
+
+    // Add row buttons
+    document.getElementById('btn-add-hp')?.addEventListener('click', () => addHPRow());
+    document.getElementById('btn-add-stcg111a')?.addEventListener('click', () => addCGRow('stcg111a'));
+    document.getElementById('btn-add-stcgOther')?.addEventListener('click', () => addCGRow('stcgOther'));
+    document.getElementById('btn-add-ltcg112a')?.addEventListener('click', () => addCGRow('ltcg112a'));
+    document.getElementById('btn-add-ltcgOther')?.addEventListener('click', () => addCGRow('ltcgOther'));
+    document.getElementById('btn-add-tds1')?.addEventListener('click', () => addTDS1Row());
+    document.getElementById('btn-add-tds2')?.addEventListener('click', () => addTDS2Row());
+    document.getElementById('btn-add-advtax')?.addEventListener('click', () => addAdvTaxRow());
+    document.getElementById('btn-add-dep')?.addEventListener('click', () => addDepRow());
+
+    // Action bar
+    document.getElementById('btn-load')?.addEventListener('click', () => {
+        const errors = validateAll();
+        if (errors.length === 0) {
+            toast('All checks passed — ready to download!', 'success');
+        } else {
+            errors.forEach(e => toast(`❌ Invalid: ${e}`, 'error'));
+            toast(`${errors.length} error(s) found — fix before downloading`, 'error');
+        }
+    });
+    document.getElementById('btn-download')?.addEventListener('click', downloadJSON);
+
+    // Reset session on page load
+    fetch("http://127.0.0.1:8000/reset", {
+        method: "POST",
+        body: new URLSearchParams({ itr_type: "itr3" })
+    }).then(() => console.log("ITR3 session reset"))
+      .catch(() => console.log("Backend not available"));
+
+    // Scalar fields
+    document.querySelectorAll('[data-key]').forEach(el => {
+        el.addEventListener('input', () => recalc());
+        if (VALIDATORS[el.id]) {
+            el.addEventListener('blur', () => validateField(el.id));
+        }
+    });
+
+    document.getElementById('residentialStatus')?.addEventListener('change', () => recalc());
+
+    // AI Double-click support — label, table cells, tax-line spans
+    document.querySelectorAll('label, .tax-line span, td').forEach(el => {
+        el.addEventListener('dblclick', async function () {
+            const text = this.innerText.trim();
+            if (!text) return;
+
+            let fieldKey = this.getAttribute('data-key');
+            let fieldEl = null;
+
+            if (!fieldKey) {
+                if (this.tagName === 'LABEL') {
+                    // <label> inside .form-field → sibling [data-key] element
+                    fieldEl = this.closest('.form-field')?.querySelector('[data-key]');
+                } else if (this.tagName === 'TD') {
+                    // <td> label cell → sibling input in same <tr>
+                    fieldEl = this.closest('tr')?.querySelector('[data-key]');
+                }
+                fieldKey = fieldEl ? fieldEl.getAttribute('data-key') : text;
+            }
+            if (!fieldEl) fieldEl = document.querySelector(`[data-key="${fieldKey}"]`);
+
+            currentFieldKey = fieldKey;
+
+            // Collect options if it's a select
+            let fieldOptions = null;
+            if (fieldEl && fieldEl.tagName === 'SELECT') {
+                fieldOptions = Array.from(fieldEl.options).map(o => ({
+                    value: o.value, label: o.text
+                }));
+            }
+
+            document.getElementById('aiTitle').innerText = text;
+            document.getElementById('aiPanel').style.right = '0';
+            document.getElementById('aiChat').innerHTML = '<div class="ai-typing">AI is thinking...</div>';
+
+            const response = await fetch('http://127.0.0.1:8000/field-assist', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    field: currentFieldKey,
+                    message: 'Explain this field briefly in the context of Indian Income Tax Return (ITR-3) filing.',
+                    ...(fieldOptions ? { options: fieldOptions } : {})
+                })
+            });
+
+            const data = await response.json();
+            document.getElementById('aiChat').innerHTML =
+                `<div style="color:#10b981;">AI: ${data.reply}</div>`;
+        });
+    });
+
+    recalc();
+});
+// ============================================================
+// SECTION 12 — AI AUTO-FILL + MASKING
+// ============================================================
+
+function fillFormFromJSON(json) {
+    document.querySelectorAll("[data-key]").forEach(input => {
+        const key = input.getAttribute("data-key");
+        if (json[key] !== undefined) input.value = json[key];
+    });
+
+    // Clear dynamic table bodies
+    ["hpBody","stcg111aBody","stcgOtherBody","ltcg112aBody","ltcgOtherBody",
+     "tds1Body","tds2Body","advTaxBody","depBody"].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.innerHTML = "";
+    });
+
+    state.hp = []; state.stcg111a = []; state.stcgOther = [];
+    state.ltcg112a = []; state.ltcgOther = [];
+    state.tds1 = []; state.tds2 = []; state.advTax = []; state.dep = [];
+
+    if (json.hp)        json.hp.forEach(r => addHPRow(r));
+    if (json.stcg111a)  json.stcg111a.forEach(r => addCGRow('stcg111a', r));
+    if (json.stcgOther) json.stcgOther.forEach(r => addCGRow('stcgOther', r));
+    if (json.ltcg112a)  json.ltcg112a.forEach(r => addCGRow('ltcg112a', r));
+    if (json.ltcgOther) json.ltcgOther.forEach(r => addCGRow('ltcgOther', r));
+    if (json.tds1)      json.tds1.forEach(r => addTDS1Row(r));
+    if (json.tds2)      json.tds2.forEach(r => addTDS2Row(r));
+    if (json.advTax)    json.advTax.forEach(r => addAdvTaxRow(r));
+    if (json.dep)       json.dep.forEach(r => addDepRow(r));
+
+    recalc();
+}
+
+// Redaction flow handled by shared.js
+</script>
+</body>
+</html>
